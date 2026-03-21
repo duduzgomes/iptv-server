@@ -4,7 +4,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 import com.duduzgomes.server_iptv.domain.user.User;
 import jakarta.persistence.*;
-import jakarta.persistence.Id;
 
 @Entity
 @Table(name = "access_logs",
@@ -37,6 +36,11 @@ public class AccessLog {
 
     @Column(nullable = false, length = 45)
     private String ipAddress;
+
+    @Column(length = 500)
+    private String ipUserAgent;
+    
+    private LocalDateTime expiresAt;
 
     @Column(nullable = false)
     private LocalDateTime connectedAt;

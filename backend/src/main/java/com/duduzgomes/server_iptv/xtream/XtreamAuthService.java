@@ -44,6 +44,17 @@ public class XtreamAuthService {
     private String timezone;
 
     public AuthResponseDTO autenticar(String username, String password) {
+        User user = autenticarRetornandoUsuario(username, password);
+
+        int activeConnections = accessLogRepository.countActiveByUserId(user.getId());
+        if (activeConnections >= user.getMaxConnections()) {
+            throw new UnauthorizedException("Limite de conexões atingido");
+        }
+
+    return buildResponse(user, activeConnections);
+    }
+
+    public User autenticarRetornandoUsuario(String username, String password) {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new UnauthorizedException("Usuário não encontrado"));
 
@@ -59,12 +70,7 @@ public class XtreamAuthService {
             throw new UnauthorizedException("Conta expirada");
         }
 
-        int activeConnections = accessLogRepository.countActiveByUserId(user.getId());
-        if (activeConnections >= user.getMaxConnections()) {
-            throw new UnauthorizedException("Limite de conexões atingido");
-        }
-
-        return buildResponse(user, activeConnections);
+        return user;
     }
 
     private AuthResponseDTO buildResponse(User user, int activeConnections) {

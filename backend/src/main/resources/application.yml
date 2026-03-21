@@ -37,6 +37,8 @@ tmdb:
   backdrop-base-url: https://image.tmdb.org/t/p/w1280
 
 xtream:
+  session:
+    duration-hours: ${SESSION_DURATION_HOURS:4}
   server:
     url: ${SERVER_URL:localhost}
     port: ${SERVER_PORT:80}
@@ -44,5 +46,6 @@ xtream:
     protocol: ${SERVER_PROTOCOL:http}
     rtmp-port: ${SERVER_RTMP_PORT:1935}
     timezone: America/Sao_Paulo
+
   hls-base-url: ${HLS_BASE_URL:http://localhost:8080/hls}
   files-base-url: ${FILES_BASE_URL:http://localhost:8080/files}
