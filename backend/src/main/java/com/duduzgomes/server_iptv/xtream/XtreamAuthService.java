@@ -73,7 +73,7 @@ public class XtreamAuthService {
 
         var userInfo = UserInfoDTO.builder()
             .username(user.getUsername())
-            .password("") // nunca retorna a senha real
+            .password("")
             .status("Active")
             .expDate(toTimestamp(user.getExpiresAt()))
             .maxConnections(String.valueOf(user.getMaxConnections()))
