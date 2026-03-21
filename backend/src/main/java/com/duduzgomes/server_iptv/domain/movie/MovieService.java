@@ -62,6 +62,34 @@ public class MovieService {
         return movieRepository.save(movie);
     }
 
+    public List<Movie> listarEntidades() {
+        return movieRepository.findByActiveTrueOrderByTitle();
+    }
+
+    @Transactional
+    public void alterarStatus(Long id, boolean active) {
+        var movie = movieRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
+        movie.setActive(active);
+        movieRepository.save(movie);
+    }
+
+    @Transactional
+    public Movie sincronizarTmdb(Long id) {
+        var movie = movieRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
+        tmdbService.enriquecerFilme(movie);
+        return movieRepository.save(movie);
+    }
+
+    @Transactional
+    public void excluir(Long id) {
+        if (!movieRepository.existsById(id)) {
+            throw new NotFoundException("Filme não encontrado");
+        }
+        movieRepository.deleteById(id);
+    }
+
     private VodStreamDTO toVodStreamDTO(Movie movie) {
         return VodStreamDTO.builder()
             .num((int) movie.getId().longValue())

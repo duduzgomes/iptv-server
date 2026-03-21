@@ -5,9 +5,10 @@ import org.springframework.stereotype.Service;
 import com.duduzgomes.server_iptv.domain.category.Category;
 import com.duduzgomes.server_iptv.domain.category.CategoryRepository;
 import com.duduzgomes.server_iptv.domain.category.ContentType;
+import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import com.duduzgomes.server_iptv.xtream.dto.CategoryDTO;
 import com.duduzgomes.server_iptv.xtream.dto.LiveStreamDTO;
-
+import jakarta.transaction.Transactional;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -32,6 +33,59 @@ public class ChannelService {
             .stream()
             .map(this::toLiveStreamDTO)
             .toList();
+    }
+
+    public List<Channel> listarEntidades() {
+        return channelRepository.findByActiveTrueOrderByNum();
+    }
+
+    @Transactional
+    public Channel criar(Long categoryId, String name, String logoUrl,
+                        String sourceUrl, String streamKey,
+                        String epgChannelId, Integer num) {
+        var category = categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new NotFoundException("Categoria não encontrada"));
+
+        return channelRepository.save(Channel.builder()
+            .name(name)
+            .category(category)
+            .logoUrl(logoUrl)
+            .sourceUrl(sourceUrl)
+            .streamKey(streamKey)
+            .epgChannelId(epgChannelId)
+            .num(num)
+            .active(true)
+            .build());
+    }
+
+    @Transactional
+    public Channel editar(Long id, String name, String logoUrl,
+                        String sourceUrl, String epgChannelId, Integer num) {
+        var channel = channelRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Canal não encontrado"));
+
+        channel.setName(name);
+        channel.setLogoUrl(logoUrl);
+        channel.setSourceUrl(sourceUrl);
+        channel.setEpgChannelId(epgChannelId);
+        channel.setNum(num);
+        return channelRepository.save(channel);
+    }
+
+    @Transactional
+    public void alterarStatus(Long id, boolean active) {
+        var channel = channelRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Canal não encontrado"));
+        channel.setActive(active);
+        channelRepository.save(channel);
+    }
+
+    @Transactional
+    public void excluir(Long id) {
+        if (!channelRepository.existsById(id)) {
+            throw new NotFoundException("Canal não encontrado");
+        }
+        channelRepository.deleteById(id);
     }
 
     private CategoryDTO toCategoryDTO(Category category) {

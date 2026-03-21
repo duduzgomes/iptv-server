@@ -104,6 +104,49 @@ public class SeriesService {
         return series;
     }
 
+    public List<Series> listarEntidades() {
+        return seriesRepository.findByActiveTrueOrderByTitle();
+    }
+
+    @Transactional
+    public void alterarStatus(Long id, boolean active) {
+        var series = seriesRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Série não encontrada"));
+        series.setActive(active);
+        seriesRepository.save(series);
+    }
+
+    @Transactional
+    public void associarArquivo(Long episodeId, String filePath) {
+        var episode = episodeRepository.findById(episodeId)
+            .orElseThrow(() -> new NotFoundException("Episódio não encontrado"));
+        episode.setFilePath(filePath);
+        episodeRepository.save(episode);
+    }
+
+    @Transactional
+    public Series sincronizarTmdb(Long id) {
+        var series = seriesRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Série não encontrada"));
+
+        List<Season>  seasons  = new ArrayList<>();
+        List<Episode> episodes = new ArrayList<>();
+
+        tmdbService.enriquecerSerie(series, seasons, episodes);
+        series = seriesRepository.save(series);
+        seasonRepository.saveAll(seasons);
+        episodeRepository.saveAll(episodes);
+        return series;
+    }
+
+    @Transactional
+    public void excluir(Long id) {
+        if (!seriesRepository.existsById(id)) {
+            throw new NotFoundException("Série não encontrada");
+        }
+        seriesRepository.deleteById(id);
+    }
+
     private SeriesDTO toSeriesDTO(Series series) {
         return SeriesDTO.builder()
             .num(series.getId().intValue())
