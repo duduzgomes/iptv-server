@@ -2,6 +2,8 @@ package com.duduzgomes.server_iptv.domain.movie;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.duduzgomes.server_iptv.domain.category.Category;
@@ -41,13 +43,13 @@ public class Movie {
     private String genre;
 
     @Column(columnDefinition = "TEXT")
-    private String cast;
+    private String castMembers;
 
     @Column(length = 255)
     private String director;
 
     @Column(precision = 3, scale = 1)
-    private Double rating;
+    private BigDecimal rating;
 
     @Column(length = 500)
     private String posterUrl;

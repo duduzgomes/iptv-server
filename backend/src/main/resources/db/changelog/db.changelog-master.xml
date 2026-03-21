@@ -11,7 +11,6 @@
     <include file="migrations/004-create-channels.sql" relativeToChangelogFile="true"/>
     <include file="migrations/005-create-movies.sql" relativeToChangelogFile="true"/>
     <include file="migrations/006-create-series.sql" relativeToChangelogFile="true"/>
-    <include file="migrations/007-create-epg.sql" relativeToChangelogFile="true"/>
-    <include file="migrations/008-create-access-logs.sql" relativeToChangelogFile="true"/>
+    <include file="migrations/007-create-access-logs.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

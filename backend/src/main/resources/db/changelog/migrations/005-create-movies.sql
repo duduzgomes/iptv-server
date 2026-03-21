@@ -7,7 +7,7 @@ CREATE TABLE movies (
     synopsis      TEXT,
     year          INT,
     genre         VARCHAR(255),
-    cast          TEXT,
+    cast_members  TEXT,
     director      VARCHAR(255),
     rating        DECIMAL(3,1),
     poster_url    VARCHAR(500),

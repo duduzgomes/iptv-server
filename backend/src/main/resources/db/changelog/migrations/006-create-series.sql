@@ -5,7 +5,7 @@ CREATE TABLE series (
     title         VARCHAR(255) NOT NULL,
     synopsis      TEXT,
     genre         VARCHAR(255),
-    cast          TEXT,
+    cast_members  TEXT,
     rating        DECIMAL(3,1),
     poster_url    VARCHAR(500),
     backdrop_url  VARCHAR(500),
