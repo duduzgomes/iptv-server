@@ -1,0 +1,22 @@
+CREATE TABLE movies (
+    id            BIGSERIAL PRIMARY KEY,
+    tmdb_id       INT          NOT NULL UNIQUE,
+    category_id   BIGINT       NOT NULL REFERENCES categories(id),
+    title         VARCHAR(255) NOT NULL,
+    original_title VARCHAR(255),
+    synopsis      TEXT,
+    year          INT,
+    genre         VARCHAR(255),
+    cast          TEXT,
+    director      VARCHAR(255),
+    rating        DECIMAL(3,1),
+    poster_url    VARCHAR(500),
+    backdrop_url  VARCHAR(500),
+    trailer_url   VARCHAR(500),
+    file_path     VARCHAR(500) NOT NULL, 
+    duration      INT,                    
+    active        BOOLEAN      NOT NULL DEFAULT true,
+    tmdb_updated_at TIMESTAMP,              
+    created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
+);
