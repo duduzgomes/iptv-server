@@ -36,6 +36,12 @@ tmdb:
   image-base-url: https://image.tmdb.org/t/p/w500
   backdrop-base-url: https://image.tmdb.org/t/p/w1280
 
+admin:
+  default:
+    username: ${ADMIN_DEFAULT_USERNAME:admin}
+    password: ${ADMIN_DEFAULT_PASSWORD:admin123}
+    email: ${ADMIN_DEFAULT_EMAIL:admin@iptv.com
+
 xtream:
   session:
     duration-hours: ${SESSION_DURATION_HOURS:4}
