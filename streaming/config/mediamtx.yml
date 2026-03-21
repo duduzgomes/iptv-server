@@ -1,0 +1,8 @@
+hlsAddress: :9000
+hlsAlwaysRemux: yes
+hlsSegmentDuration: 2s
+hlsSegmentCount: 8
+
+paths:
+  all_others: # aceita qualquer stream key
+    source: publisher

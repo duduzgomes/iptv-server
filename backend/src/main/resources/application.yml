@@ -44,3 +44,5 @@ xtream:
     protocol: ${SERVER_PROTOCOL:http}
     rtmp-port: ${SERVER_RTMP_PORT:1935}
     timezone: America/Sao_Paulo
+  hls-base-url: ${HLS_BASE_URL:http://localhost:8080/hls}
+  files-base-url: ${FILES_BASE_URL:http://localhost:8080/files}
