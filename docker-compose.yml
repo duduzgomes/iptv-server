@@ -17,6 +17,20 @@ services:
     networks:
       - iptv-network
 
+  ffmpeg-service:
+    build: ./ffmpeg-service
+    expose:
+      - "8081"
+    environment:
+      MINIO_URL: http://minio:9000
+      MINIO_USER: ${MINIO_USER:-minioadmin}
+      MINIO_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
+      CALLBACK_URL: http://spring-boot:8080/internal/transcode/callback
+    depends_on:
+      - minio
+    networks:
+      - iptv-network
+
   spring-boot:
     build: ./backend
     expose:

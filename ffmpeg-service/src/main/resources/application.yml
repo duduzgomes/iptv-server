@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: ffmpeg-service
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8081
+
+minio:
+  url: ${MINIO_URL:http://localhost:9000}
+  user: ${MINIO_USER:minioadmin}
+  password: ${MINIO_PASSWORD:minioadmin}
+  bucket: ${MINIO_BUCKET:vod}
+
+streaming:
+  ffmpeg-path: ${FFMPEG_PATH:ffmpeg}
+  hls-segment-duration: 2
+  hls-segment-count: 8
+
+callback:
+  url: ${CALLBACK_URL:http://localhost:8080/internal/transcode/callback}
