@@ -13,6 +13,7 @@ import com.duduzgomes.server_iptv.domain.channel.ChannelRepository;
 import com.duduzgomes.server_iptv.domain.movie.MovieRepository;
 import com.duduzgomes.server_iptv.domain.series.episode.EpisodeRepository;
 import com.duduzgomes.server_iptv.domain.user.User;
+import com.duduzgomes.server_iptv.domain.vod.VodStatus;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
@@ -25,7 +26,7 @@ public class XtreamStreamController {
     private final ChannelRepository  channelRepository;
     private final MovieRepository    movieRepository;
     private final EpisodeRepository  episodeRepository;
-    private final AccessLogService  accessLogService;
+    private final AccessLogService   accessLogService;
 
     @Value("${xtream.hls-base-url:http://localhost:8080/hls}")
     private String hlsBaseUrl;
@@ -73,7 +74,7 @@ public class XtreamStreamController {
         @PathVariable Long streamId,
         HttpServletRequest request
     ) {
-        User user = authService.autenticarRetornandoUsuario(username, password);
+        var user = authService.autenticarRetornandoUsuario(username, password);
 
         var movie = movieRepository.findById(streamId)
             .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
@@ -82,15 +83,19 @@ public class XtreamStreamController {
             throw new NotFoundException("Filme indisponível");
         }
 
+        // verifica se está pronto
+        if (movie.getVodStatus() != VodStatus.READY) {
+            throw new NotFoundException("Filme ainda não está disponível");
+        }
+
         accessLogService.registrarOuRenovarConexao(
-            user,
-            AccessContentType.MOVIE,
-            streamId,
+            user, AccessContentType.MOVIE, streamId,
             request.getRemoteAddr(),
             request.getHeader("User-Agent")
         );
 
-        String url = filesBaseUrl + movie.getFilePath();
+        // redireciona pro HLS no MinIO via Nginx
+        String url = "/vod/" + movie.getHlsPath() + "/master.m3u8";
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();
@@ -104,24 +109,30 @@ public class XtreamStreamController {
         @PathVariable Long episodeId,
         HttpServletRequest request
     ) {
-        User user = authService.autenticarRetornandoUsuario(username, password);
+        var user = authService.autenticarRetornandoUsuario(username, password);
 
         var episode = episodeRepository.findById(episodeId)
             .orElseThrow(() -> new NotFoundException("Episódio não encontrado"));
 
-        if (!episode.getActive() || episode.getFilePath() == null) {
+        if (!episode.getActive()) {
+            throw new NotFoundException("Episódio indisponível");
+        }
+
+        if (episode.getVodStatus() != VodStatus.READY) {
+            throw new NotFoundException("Episódio ainda não está disponível");
+        }
+
+        if (episode.getHlsPath() == null) {
             throw new NotFoundException("Arquivo não disponível");
         }
 
         accessLogService.registrarOuRenovarConexao(
-            user,
-            AccessContentType.EPISODE,
-            episodeId,
+            user, AccessContentType.EPISODE, episodeId,
             request.getRemoteAddr(),
             request.getHeader("User-Agent")
         );
 
-        String url = filesBaseUrl + episode.getFilePath();
+        String url = "/vod/" + episode.getHlsPath() + "/master.m3u8";
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();
