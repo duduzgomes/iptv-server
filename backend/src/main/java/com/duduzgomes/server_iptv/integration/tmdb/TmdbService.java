@@ -1,6 +1,8 @@
 package com.duduzgomes.server_iptv.integration.tmdb;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.duduzgomes.server_iptv.domain.movie.Movie;
@@ -20,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TmdbService {
@@ -79,84 +82,84 @@ public class TmdbService {
     }
 
     public void enriquecerSerie(Series series,List<Season> seasons,List<Episode> episodes) {
-    TmdbSeriesDTO tmdbSeries = tmdbClient.buscarSerie(series.getTmdbId());
-    TmdbCreditsDTO credits   = tmdbClient.buscarCreditosSerie(series.getTmdbId());
+        TmdbSeriesDTO tmdbSeries = tmdbClient.buscarSerie(series.getTmdbId());
+        TmdbCreditsDTO credits   = tmdbClient.buscarCreditosSerie(series.getTmdbId());
 
-    // metadados da série
-    series.setTitle(tmdbSeries.name());
-    series.setSynopsis(tmdbSeries.overview());
-    series.setStatus(tmdbSeries.status());
+        // metadados da série
+        series.setTitle(tmdbSeries.name());
+        series.setSynopsis(tmdbSeries.overview());
+        series.setStatus(tmdbSeries.status());
 
-    if (tmdbSeries.voteAverage() != null) {
-        series.setRating(BigDecimal.valueOf(tmdbSeries.voteAverage()));
-    }
-    if (tmdbSeries.posterPath() != null) {
-        series.setPosterUrl(imageBaseUrl + tmdbSeries.posterPath());
-    }
-    if (tmdbSeries.backdropPath() != null) {
-        series.setBackdropUrl(backdropBaseUrl + tmdbSeries.backdropPath());
-    }
-    if (tmdbSeries.genres() != null) {
-        series.setGenre(tmdbSeries.genres().stream()
-            .map(g -> g.name())
-            .collect(Collectors.joining(", ")));
-    }
-    if (credits.cast() != null) {
-        series.setCastMembers(credits.cast().stream()
-            .limit(5)
-            .map(c -> c.name())
-            .collect(Collectors.joining(", ")));
-    }
-    series.setTmdbUpdatedAt(LocalDateTime.now());
+        if (tmdbSeries.voteAverage() != null) {
+            series.setRating(BigDecimal.valueOf(tmdbSeries.voteAverage()));
+        }
+        if (tmdbSeries.posterPath() != null) {
+            series.setPosterUrl(imageBaseUrl + tmdbSeries.posterPath());
+        }
+        if (tmdbSeries.backdropPath() != null) {
+            series.setBackdropUrl(backdropBaseUrl + tmdbSeries.backdropPath());
+        }
+        if (tmdbSeries.genres() != null) {
+            series.setGenre(tmdbSeries.genres().stream()
+                .map(g -> g.name())
+                .collect(Collectors.joining(", ")));
+        }
+        if (credits.cast() != null) {
+            series.setCastMembers(credits.cast().stream()
+                .limit(5)
+                .map(c -> c.name())
+                .collect(Collectors.joining(", ")));
+        }
+        series.setTmdbUpdatedAt(LocalDateTime.now());
 
-    // busca episódios de cada temporada
-    if (tmdbSeries.seasons() != null) {
-        for (TmdbSeasonSummaryDTO s : tmdbSeries.seasons()) {
+        // busca episódios de cada temporada
+        if (tmdbSeries.seasons() != null) {
+            for (TmdbSeasonSummaryDTO s : tmdbSeries.seasons()) {
 
-            // ignora temporada 0 (extras/especiais)
-            if (s.seasonNumber() == 0) continue;
+                // ignora temporada 0 (extras/especiais)
+                if (s.seasonNumber() == 0) continue;
 
-            TmdbSeasonDetailDTO detail =
-                tmdbClient.buscarTemporada(series.getTmdbId(), s.seasonNumber());
+                TmdbSeasonDetailDTO detail =
+                    tmdbClient.buscarTemporada(series.getTmdbId(), s.seasonNumber());
 
-            Season season = Season.builder()
-                .series(series)
-                .tmdbId(detail.id())
-                .number(detail.seasonNumber())
-                .title(detail.name())
-                .synopsis(detail.overview())
-                .posterUrl(detail.posterPath() != null
-                    ? imageBaseUrl + detail.posterPath() : null)
-                .build();
+                Season season = Season.builder()
+                    .series(series)
+                    .tmdbId(detail.id())
+                    .number(detail.seasonNumber())
+                    .title(detail.name())
+                    .synopsis(detail.overview())
+                    .posterUrl(detail.posterPath() != null
+                        ? imageBaseUrl + detail.posterPath() : null)
+                    .build();
 
-            seasons.add(season);
+                seasons.add(season);
 
-            // episódios da temporada
-            if (detail.episodes() != null) {
-                for (TmdbEpisodeDTO e : detail.episodes()) {
-                    LocalDate airDate = null;
-                    if (e.airDate() != null && !e.airDate().isBlank()) {
-                        airDate = LocalDate.parse(e.airDate());
+                // episódios da temporada
+                if (detail.episodes() != null) {
+                    for (TmdbEpisodeDTO e : detail.episodes()) {
+                        LocalDate airDate = null;
+                        if (e.airDate() != null && !e.airDate().isBlank()) {
+                            airDate = LocalDate.parse(e.airDate());
+                        }
+
+                        Episode episode = Episode.builder()
+                            .season(season)
+                            .tmdbId(e.id())
+                            .number(e.episodeNumber())
+                            .title(e.name())
+                            .synopsis(e.overview())
+                            .posterUrl(e.stillPath() != null
+                                ? imageBaseUrl + e.stillPath() : null)
+                            .duration(e.runtime())
+                            .airDate(airDate)
+                            .filePath(null)
+                            .active(true)
+                            .build();
+
+                        episodes.add(episode);
                     }
-
-                    Episode episode = Episode.builder()
-                        .season(season)
-                        .tmdbId(e.id())
-                        .number(e.episodeNumber())
-                        .title(e.name())
-                        .synopsis(e.overview())
-                        .posterUrl(e.stillPath() != null
-                            ? imageBaseUrl + e.stillPath() : null)
-                        .duration(e.runtime())
-                        .airDate(airDate)
-                        .filePath(null)
-                        .active(true)
-                        .build();
-
-                    episodes.add(episode);
                 }
             }
         }
     }
-}
 }

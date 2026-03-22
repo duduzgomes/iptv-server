@@ -1,6 +1,8 @@
 package com.duduzgomes.server_iptv.domain.movie;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.duduzgomes.server_iptv.domain.category.CategoryRepository;
@@ -12,6 +14,7 @@ import com.duduzgomes.server_iptv.xtream.dto.VodStreamDTO;
 import java.time.ZoneId;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MovieService {
@@ -40,7 +43,8 @@ public class MovieService {
     }
 
     @Transactional
-    public Movie cadastrar(Long categoryId, Integer tmdbId, String filePath) {
+    public Movie cadastrar(Long categoryId, Integer tmdbId) {
+
         movieRepository.findByTmdbId(tmdbId).ifPresent(m -> {
             throw new IllegalArgumentException("Filme já cadastrado");
         });
@@ -51,14 +55,14 @@ public class MovieService {
         var movie = Movie.builder()
             .tmdbId(tmdbId)
             .category(category)
-            .filePath(filePath)
+            .filePath("")
             .title("Carregando...")
             .active(true)
             .build();
 
         movie = movieRepository.save(movie);
-        tmdbService.enriquecerFilme(movie);
 
+        tmdbService.enriquecerFilme(movie);
         return movieRepository.save(movie);
     }
 
