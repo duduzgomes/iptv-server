@@ -1,4 +1,4 @@
-package com.duduzgomes.server_iptv.domain.vod;
+package com.duduzgomes.server_iptv.domain.vod.dto;
 
 import java.util.List;
 

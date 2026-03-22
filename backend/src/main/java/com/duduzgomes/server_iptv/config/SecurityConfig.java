@@ -85,6 +85,7 @@ public class SecurityConfig {
                 .requestMatchers("/movie/**").permitAll()
                 .requestMatchers("/series/**").permitAll()
                 .requestMatchers("/auth/login").permitAll()
+                .requestMatchers("/internal/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 ->

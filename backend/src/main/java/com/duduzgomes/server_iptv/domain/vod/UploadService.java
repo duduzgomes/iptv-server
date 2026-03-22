@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.duduzgomes.server_iptv.domain.movie.MovieRepository;
 import com.duduzgomes.server_iptv.domain.series.episode.EpisodeRepository;
+import com.duduzgomes.server_iptv.domain.vod.dto.IniciarUploadResponseDTO;
 import com.duduzgomes.server_iptv.integration.minio.MinioService;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ public class UploadService {
     private final MovieRepository   movieRepository;
     private final EpisodeRepository episodeRepository;
     private final MinioService      minioService;
+    private final FFmpegClient      ffmpegClient;
 
     // inicia upload de filme — retorna uploadId + presigned URLs
     @Transactional
@@ -60,7 +62,9 @@ public class UploadService {
             movieRepository.save(movie);
 
             log.info("Upload do filme {} concluído — acionando FFmpeg", movieId);
-            // TODO: acionar FFmpeg Service (próximo passo)
+            movie.setVodStatus(VodStatus.PROCESSING);
+            movieRepository.save(movie);
+            ffmpegClient.transcodarFilme(movieId, movie.getMinioKey());
 
         } catch (Exception e) {
             movie.setVodStatus(VodStatus.ERROR);
@@ -106,7 +110,9 @@ public class UploadService {
             episodeRepository.save(episode);
 
             log.info("Upload do episódio {} concluído — acionando FFmpeg", episodeId);
-            // TODO: acionar FFmpeg Service
+            episode.setVodStatus(VodStatus.PROCESSING);
+            episodeRepository.save(episode);
+            ffmpegClient.transcodarEpisodio(episodeId, episode.getMinioKey());
 
         } catch (Exception e) {
             episode.setVodStatus(VodStatus.ERROR);

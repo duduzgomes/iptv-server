@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.duduzgomes.server_iptv.domain.vod.dto.ConcluirUploadRequestDTO;
+import com.duduzgomes.server_iptv.domain.vod.dto.IniciarUploadResponseDTO;
+
 @RestController
 @RequestMapping("/admin/upload")
 @RequiredArgsConstructor
