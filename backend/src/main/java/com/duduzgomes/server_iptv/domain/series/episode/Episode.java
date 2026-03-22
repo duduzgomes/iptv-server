@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.duduzgomes.server_iptv.domain.series.season.Season;
+import com.duduzgomes.server_iptv.domain.vod.VodStatus;
 
 @Entity
 @Table(name = "episodes")
@@ -41,9 +42,19 @@ public class Episode {
     private Integer duration;
     private LocalDate airDate;
 
-    // null = sem arquivo associado ainda
     @Column(length = 500)
     private String filePath;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private VodStatus vodStatus = VodStatus.PENDING;
+
+    @Column(length = 500)
+    private String minioKey;
+
+    @Column(length = 500)
+    private String hlsPath;
 
     @Column(nullable = false)
     @Builder.Default

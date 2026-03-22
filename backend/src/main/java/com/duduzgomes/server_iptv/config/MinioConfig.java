@@ -1,5 +1,6 @@
 package com.duduzgomes.server_iptv.config;
 
+import io.minio.MinioAsyncClient;
 import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,13 @@ public class MinioConfig {
     @Bean
     public MinioClient minioClient() {
         return MinioClient.builder()
+            .endpoint(url)
+            .credentials(user, password)
+            .build();
+    }
+    @Bean
+    public MinioAsyncClient minioAsyncClient() {
+        return MinioAsyncClient.builder()
             .endpoint(url)
             .credentials(user, password)
             .build();

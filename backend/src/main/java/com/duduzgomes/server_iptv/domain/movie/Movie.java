@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.duduzgomes.server_iptv.domain.category.Category;
+import com.duduzgomes.server_iptv.domain.vod.VodStatus;
 
 @Entity
 @Table(name = "movies")
@@ -68,6 +69,17 @@ public class Movie {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @Column(length = 500)
+    private String minioKey;
+
+    @Column(length = 500)
+    private String hlsPath;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private VodStatus vodStatus = VodStatus.PENDING;
 
     private LocalDateTime tmdbUpdatedAt;
 
