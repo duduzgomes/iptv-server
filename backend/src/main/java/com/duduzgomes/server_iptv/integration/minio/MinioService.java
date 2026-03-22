@@ -18,8 +18,14 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class MinioService {
 
-    private final MinioClient      minioClient;
+    private final MinioClient minioClient;
     private final MinioAsyncClient minioAsyncClient;
+
+    @Value("${minio.url}")
+    private String minioInternalUrl;
+
+    @Value("${minio.public-url}")
+    private String minioPublicUrl;
 
     @Value("${minio.bucket}")
     private String bucket;
@@ -37,15 +43,13 @@ public class MinioService {
     }
 
     // gera presigned URL pra cada chunk — MinioClient tem getPresignedObjectUrl
-    public String gerarPresignedUrlParaChunk(String objectKey,
-                                              String uploadId,
-                                              int partNumber) {
+    public String gerarPresignedUrlParaChunk(String objectKey,String uploadId,int partNumber) {
         try {
             Map<String, String> queryParams = new HashMap<>();
             queryParams.put("uploadId", uploadId);
             queryParams.put("partNumber", String.valueOf(partNumber));
 
-            return minioClient.getPresignedObjectUrl(
+            String url = minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                     .bucket(bucket)
                     .object(objectKey)
@@ -54,15 +58,16 @@ public class MinioService {
                     .extraQueryParams(queryParams)
                     .build()
             );
+
+            return url.replace(minioInternalUrl, minioPublicUrl);
+            
         } catch (Exception e) {
             throw new RuntimeException("Erro ao gerar URL: " + e.getMessage());
         }
     }
 
     // conclui multipart
-    public void concluirMultipartUpload(String objectKey,
-                                         String uploadId,
-                                         List<String> etags) {
+    public void concluirMultipartUpload(String objectKey,String uploadId, List<String> etags) {
         try {
             List<Part> parts = new ArrayList<>();
             for (int i = 0; i < etags.size(); i++) {
@@ -90,10 +95,10 @@ public class MinioService {
         }
     }
 
-    // URL temporária pra FFmpeg baixar
-    public String gerarUrlTemporaria(String objectKey) {
+    // URL pra FFmpeg baixar
+    public String gerarUrlInterna(String objectKey) {
         try {
-            return minioClient.getPresignedObjectUrl(
+            String url = minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                     .bucket(bucket)
                     .object(objectKey)
@@ -101,6 +106,9 @@ public class MinioService {
                     .expiry(1, TimeUnit.HOURS)
                     .build()
             );
+
+            return url;
+           
         } catch (Exception e) {
             throw new RuntimeException("Erro ao gerar URL: " + e.getMessage());
         }

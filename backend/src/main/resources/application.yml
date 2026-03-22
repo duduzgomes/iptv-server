@@ -53,6 +53,7 @@ admin:
 
 minio:
   url: ${MINIO_URL:http://localhost:9000}
+  public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
   user: ${MINIO_USER:minioadmin}
   password: ${MINIO_PASSWORD:minioadmin}
   bucket: vod
@@ -70,3 +71,9 @@ xtream:
 
   hls-base-url: ${HLS_BASE_URL:http://localhost:8080/hls}
   files-base-url: ${FILES_BASE_URL:http://localhost:8080/files}
+logging:
+  level:
+    com.duduzgomes: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE

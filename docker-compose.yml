@@ -19,12 +19,13 @@ services:
 
   minio:
     image: quay.io/minio/minio:latest
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    expose:
+      - "9000"
+      - "9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
+      MINIO_DOMAIN: localhost
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
@@ -87,6 +88,7 @@ services:
       ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD:-admin123}
       ADMIN_DEFAULT_EMAIL: ${ADMIN_DEFAULT_EMAIL:-admin@iptv.com}
       MINIO_URL: http://minio:9000
+      MINIO_PUBLIC_URL: http://localhost:9000
       MINIO_USER: ${MINIO_USER:-minioadmin}
       MINIO_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
       STREAMING_FFMPEG_SERVICE_URL: http://ffmpeg-service:8081
@@ -118,6 +120,7 @@ services:
     image: nginx:alpine
     ports:
       - "80:80"
+      - "9000:9000"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./streaming/hls:/hls

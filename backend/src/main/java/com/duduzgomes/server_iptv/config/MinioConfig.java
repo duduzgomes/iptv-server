@@ -25,6 +25,7 @@ public class MinioConfig {
             .credentials(user, password)
             .build();
     }
+
     @Bean
     public MinioAsyncClient minioAsyncClient() {
         return MinioAsyncClient.builder()

@@ -20,7 +20,7 @@ public class FFmpegClient {
     private String ffmpegServiceUrl;
 
     public void transcodarFilme(Long movieId, String minioKey) {
-        String inputUrl = minioService.gerarUrlTemporaria(minioKey);
+        String inputUrl = minioService.gerarUrlInterna(minioKey);
 
         var request = new TranscodeRequestDTO(
             movieId,
@@ -33,7 +33,7 @@ public class FFmpegClient {
     }
 
     public void transcodarEpisodio(Long episodeId, String minioKey) {
-        String inputUrl = minioService.gerarUrlTemporaria(minioKey);
+        String inputUrl = minioService.gerarUrlInterna(minioKey);
 
         var request = new TranscodeRequestDTO(
             episodeId,

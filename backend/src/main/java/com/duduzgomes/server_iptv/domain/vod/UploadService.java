@@ -34,7 +34,9 @@ public class UploadService {
         // gera presigned URL pra cada chunk
         List<String> urls = new ArrayList<>();
         for (int i = 1; i <= totalChunks; i++) {
-            urls.add(minioService.gerarPresignedUrlParaChunk(objectKey, uploadId, i));
+            String url = minioService.gerarPresignedUrlParaChunk(objectKey, uploadId, i);
+            log.info("URL gerada: {} ", url);
+            urls.add(url);
         }
 
         // atualiza status

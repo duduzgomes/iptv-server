@@ -35,8 +35,7 @@ public class MinioService {
     }
 
     // faz upload de InputStream pro MinIO
-    public void upload(String objectKey, InputStream inputStream,
-                       long tamanho, String contentType) {
+    public void upload(String objectKey, InputStream inputStream,long tamanho, String contentType) {
         try {
             minioClient.putObject(
                 PutObjectArgs.builder()

@@ -42,6 +42,11 @@ public class MovieService {
             .toList();
     }
 
+    public Movie buscarPorId(Long id) {
+        return movieRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
+    }
+
     @Transactional
     public Movie cadastrar(Long categoryId, Integer tmdbId) {
 

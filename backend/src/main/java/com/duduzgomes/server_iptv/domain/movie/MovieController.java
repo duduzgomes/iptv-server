@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -19,6 +18,11 @@ public class MovieController {
     @GetMapping
     public ResponseEntity<List<Movie>> listar() {
         return ResponseEntity.ok(movieService.listarEntidades());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Movie> buscar(@PathVariable Long id) {
+        return ResponseEntity.ok(movieService.buscarPorId(id));
     }
 
     @PostMapping
