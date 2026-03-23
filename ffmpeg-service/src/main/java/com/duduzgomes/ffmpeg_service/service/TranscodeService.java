@@ -38,7 +38,7 @@ public class TranscodeService {
             request.contentType().toLowerCase(),
             String.valueOf(request.contentId()));
 
-        String hlsPath = "vod/" + request.outputPath();
+        String hlsPath = request.outputPath();
 
         try {
             log.info("Iniciando transcodificação — {} id: {}",

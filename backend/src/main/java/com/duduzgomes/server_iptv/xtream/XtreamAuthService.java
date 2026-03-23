@@ -3,7 +3,6 @@ package com.duduzgomes.server_iptv.xtream;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.duduzgomes.server_iptv.domain.access.AccessLogRepository;
 import com.duduzgomes.server_iptv.domain.user.User;
@@ -23,7 +22,6 @@ public class XtreamAuthService {
 
     private final UserRepository userRepository;
     private final AccessLogRepository accessLogRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Value("${xtream.server.url}")
     private String serverUrl;
@@ -51,14 +49,14 @@ public class XtreamAuthService {
             throw new UnauthorizedException("Limite de conexões atingido");
         }
 
-    return buildResponse(user, activeConnections);
+        return buildResponse(user, activeConnections);
     }
 
     public User autenticarRetornandoUsuario(String username, String password) {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new UnauthorizedException("Usuário não encontrado"));
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!password.equals(user.getPassword())) {
             throw new UnauthorizedException("Senha inválida");
         }
 
