@@ -34,4 +34,19 @@ public class JwtService {
         return jwtEncoder.encode(JwtEncoderParameters.from(claims))
             .getTokenValue();
     }
+
+    public String gerarStreamToken(Long userId) {
+        var now = Instant.now();
+
+        var claims = JwtClaimsSet.builder()
+            .issuer("iptv-server")
+            .subject(userId.toString())
+            .claim("type", "stream")
+            .issuedAt(now)
+            .expiresAt(now.plusSeconds(4 * 3600))
+            .build();
+
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims))
+            .getTokenValue();
+    }
 }

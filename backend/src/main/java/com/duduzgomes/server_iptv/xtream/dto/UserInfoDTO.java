@@ -11,6 +11,8 @@ public record UserInfoDTO(
     String username,
     String password,
     String status,
+    String message,     
+    int auth,  
 
     @JsonProperty("exp_date")
     String expDate,

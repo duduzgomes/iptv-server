@@ -8,6 +8,7 @@ public record ServerInfoDTO(
 
     String url,
     String port,
+    boolean process,
 
     @JsonProperty("https_port")
     String httpsPort,

@@ -10,6 +10,9 @@ import com.duduzgomes.server_iptv.domain.category.ContentType;
 import com.duduzgomes.server_iptv.integration.tmdb.TmdbService;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import com.duduzgomes.server_iptv.xtream.dto.CategoryDTO;
+import com.duduzgomes.server_iptv.xtream.dto.VodInfoDTO;
+import com.duduzgomes.server_iptv.xtream.dto.VodInfoDetailDTO;
+import com.duduzgomes.server_iptv.xtream.dto.VodMovieDataDTO;
 import com.duduzgomes.server_iptv.xtream.dto.VodStreamDTO;
 import java.time.ZoneId;
 import java.util.List;
@@ -45,6 +48,68 @@ public class MovieService {
     public Movie buscarPorId(Long id) {
         return movieRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
+    }
+
+    public VodInfoDTO buscarInfo(Long movieId) {
+        var movie = movieRepository.findById(movieId)
+            .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
+
+        var movieData = VodMovieDataDTO.builder()
+            .streamId(movie.getId())
+            .name(movie.getTitle())
+            .added(toTimestamp(movie.getCreatedAt()))
+            .categoryId(String.valueOf(movie.getCategory().getId()))
+            .containerExtension("mp4")
+            .customSid("")
+            .directSource("")
+            .build();
+
+        // converte duração em minutos para segundos
+        Integer durationSecs = movie.getDuration() != null
+            ? movie.getDuration() * 60 : 0;
+
+        // formata duração como "HH:MM:SS"
+        String durationStr = movie.getDuration() != null
+            ? String.format("%02d:%02d:%02d",
+                movie.getDuration() / 60,
+                movie.getDuration() % 60, 0)
+            : "00:00:00";
+
+        var info = VodInfoDetailDTO.builder()
+            .name(movie.getTitle())
+            .nameO(movie.getOriginalTitle())
+            .plot(movie.getSynopsis())
+            .description(movie.getSynopsis())
+            .cast(movie.getCastMembers())
+            .actors(movie.getCastMembers())
+            .director(movie.getDirector())
+            .genre(movie.getGenre())
+            .rating(movie.getRating() != null ? movie.getRating().toString() : "0")
+            .ratingMpaa("")
+            .ratingCountKinopoisk(0)
+            .imdbId("")
+            .kinopoiskUrl("")
+            .releasedate(movie.getYear() != null ? movie.getYear().toString() : "")
+            .releaseDate(movie.getYear() != null ? movie.getYear().toString() : "")
+            .youtubeTrailer("")
+            .episodeRunTime("")
+            .movieImage(movie.getPosterUrl())
+            .coverBig(movie.getPosterUrl())
+            .backdropPath(movie.getBackdropUrl() != null
+                ? List.of(movie.getBackdropUrl()) : List.of())
+            .durationSecs(durationSecs)
+            .duration(durationStr)
+            .bitrate(0)
+            .age("")
+            .country("")
+            .audio("")
+            .video("")
+            .build();
+
+        return VodInfoDTO.builder()
+            .movieData(movieData)
+            .info(info)
+            .build();
     }
 
     @Transactional

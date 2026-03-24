@@ -77,14 +77,16 @@ public class XtreamAuthService {
 
         var userInfo = UserInfoDTO.builder()
             .username(user.getUsername())
-            .password("")
+            .password(user.getPassword())
+            .message("")         
+            .auth(1)                  
             .status("Active")
             .expDate(toTimestamp(user.getExpiresAt()))
             .maxConnections(String.valueOf(user.getMaxConnections()))
             .activeCons(String.valueOf(activeConnections))
             .createdAt(toTimestamp(user.getCreatedAt()))
             .isTrial("0")
-            .allowedOutputFormats(List.of("m3u8", "ts"))
+            .allowedOutputFormats(List.of("m3u8", "ts", "rtmp"))
             .build();
 
         var serverInfo = ServerInfoDTO.builder()
@@ -96,6 +98,7 @@ public class XtreamAuthService {
             .timestamp(toTimestamp(now))
             .timezone(timezone)
             .timeNow(now.format(formatter))
+            .process(true)            // ← adiciona
             .build();
 
         return AuthResponseDTO.builder()
