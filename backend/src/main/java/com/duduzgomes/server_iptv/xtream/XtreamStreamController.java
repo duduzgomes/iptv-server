@@ -1,6 +1,8 @@
 package com.duduzgomes.server_iptv.xtream;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +16,16 @@ import com.duduzgomes.server_iptv.domain.movie.MovieRepository;
 import com.duduzgomes.server_iptv.domain.series.episode.EpisodeRepository;
 import com.duduzgomes.server_iptv.domain.user.User;
 import com.duduzgomes.server_iptv.domain.vod.VodStatus;
+import com.duduzgomes.server_iptv.security.JwtService;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
+
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.net.URI;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class XtreamStreamController {
@@ -27,12 +35,10 @@ public class XtreamStreamController {
     private final MovieRepository    movieRepository;
     private final EpisodeRepository  episodeRepository;
     private final AccessLogService   accessLogService;
+    private final JwtService         jwtService;
 
-    @Value("${xtream.hls-base-url:http://localhost:8080/hls}")
-    private String hlsBaseUrl;
-
-    @Value("${xtream.files-base-url:http://localhost:8080/files}")
-    private String filesBaseUrl;
+    @Value("${server.url:http://localhost}")
+    private String serverUrl;
 
     // canal ao vivo
     @GetMapping("/live/{username}/{password}/{streamId}.m3u8")
@@ -40,7 +46,8 @@ public class XtreamStreamController {
         @PathVariable String username,
         @PathVariable String password,
         @PathVariable Long streamId,
-        HttpServletRequest request
+        HttpServletRequest request,
+        HttpServletResponse response
     ) {
         User user = authService.autenticarRetornandoUsuario(username, password);
 
@@ -60,7 +67,10 @@ public class XtreamStreamController {
             request.getHeader("User-Agent")
         );
 
-        String url = hlsBaseUrl + "/" + channel.getStreamKey() + "/master.m3u8";
+        definirCookieStreaming(user, response);
+
+        String url = serverUrl + "/" + channel.getStreamKey() + "/master.m3u8";
+    
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();
@@ -72,7 +82,8 @@ public class XtreamStreamController {
         @PathVariable String username,
         @PathVariable String password,
         @PathVariable Long streamId,
-        HttpServletRequest request
+        HttpServletRequest request,
+        HttpServletResponse response
     ) {
         var user = authService.autenticarRetornandoUsuario(username, password);
 
@@ -94,8 +105,11 @@ public class XtreamStreamController {
             request.getHeader("User-Agent")
         );
 
+        definirCookieStreaming(user, response);
+
         // redireciona pro HLS no MinIO via Nginx
-        String url = "/vod/" + movie.getHlsPath() + "/master.m3u8";
+        String url = serverUrl + "/vod/" + movie.getHlsPath() + "/master.m3u8";
+        log.info("url redirecionada minio :" + url );
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();
@@ -107,7 +121,8 @@ public class XtreamStreamController {
         @PathVariable String username,
         @PathVariable String password,
         @PathVariable Long episodeId,
-        HttpServletRequest request
+        HttpServletRequest request,
+        HttpServletResponse response
     ) {
         var user = authService.autenticarRetornandoUsuario(username, password);
 
@@ -132,9 +147,20 @@ public class XtreamStreamController {
             request.getHeader("User-Agent")
         );
 
+        definirCookieStreaming(user, response);
+
         String url = "/vod/" + episode.getHlsPath() + "/master.m3u8";
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();
+    }
+
+    private void definirCookieStreaming(User user, HttpServletResponse response) {
+        String token = jwtService.gerarStreamToken(user.getId());
+        Cookie cookie = new Cookie("stream_token", token);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/vod");
+        cookie.setMaxAge(4 * 3600);
+        response.addCookie(cookie);
     }
 }
