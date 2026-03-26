@@ -106,28 +106,28 @@ services:
     build: ./ffmpeg-service
     expose:
       - "8081"
-    depends_on:
-      minio:
-        condition: service_healthy
-      spring-boot:
-        condition: service_started
     environment:
       MINIO_URL: http://minio:9000
       MINIO_USER: ${MINIO_USER:-minioadmin}
       MINIO_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
       CALLBACK_URL: http://spring-boot:8080/internal/transcode/callback
+    depends_on:
+      minio:
+        condition: service_healthy
+      spring-boot:
+        condition: service_started
     networks:
       - iptv-network
 
   nginx:
-    image: openresty/openresty:alpine
+    build: ./nginx
     ports:
       - "80:80"
       - "9000:9000"
     volumes:
+      - ./streaming/hls:/var/hls
       - ./nginx/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
-      - ./streaming/hls:/hls
-      - ./backend/src/main/resources/certs/public.pem:/etc/nginx/certs/public.pem
+      - ./backend/src/main/resources/certs/public.pem:/etc/nginx/certs/public.pem:ro
     depends_on:
       - spring-boot
       - mediamtx

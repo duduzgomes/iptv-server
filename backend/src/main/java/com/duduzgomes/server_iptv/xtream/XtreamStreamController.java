@@ -18,12 +18,10 @@ import com.duduzgomes.server_iptv.domain.user.User;
 import com.duduzgomes.server_iptv.domain.vod.VodStatus;
 import com.duduzgomes.server_iptv.security.JwtService;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
-
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @RestController
@@ -46,8 +44,7 @@ public class XtreamStreamController {
         @PathVariable String username,
         @PathVariable String password,
         @PathVariable Long streamId,
-        HttpServletRequest request,
-        HttpServletResponse response
+        HttpServletRequest request
     ) {
         User user = authService.autenticarRetornandoUsuario(username, password);
 
@@ -58,16 +55,16 @@ public class XtreamStreamController {
             throw new NotFoundException("Canal indisponível");
         }
 
+        String clientIp = obterIp(request);
+
         // registra ou renova sessão
         accessLogService.registrarOuRenovarConexao(
             user,
             AccessContentType.LIVE,
             streamId,
-            request.getRemoteAddr(),
+            clientIp,
             request.getHeader("User-Agent")
         );
-
-        definirCookieStreaming(user, response);
 
         String url = serverUrl + "/" + channel.getStreamKey() + "/master.m3u8";
     
@@ -77,13 +74,12 @@ public class XtreamStreamController {
     }
 
     // filme
-    @GetMapping("/movie/{username}/{password}/{streamId}.mp4")
+    @GetMapping("/movie/{username}/{password}/{streamId}.m3u8")
     public ResponseEntity<Void> movieStream(
         @PathVariable String username,
         @PathVariable String password,
         @PathVariable Long streamId,
-        HttpServletRequest request,
-        HttpServletResponse response
+        HttpServletRequest request
     ) {
         var user = authService.autenticarRetornandoUsuario(username, password);
 
@@ -99,16 +95,32 @@ public class XtreamStreamController {
             throw new NotFoundException("Filme ainda não está disponível");
         }
 
+        log.info("IP capturado: {} | X-Forwarded-For: {}", 
+        request.getRemoteAddr(), 
+        request.getHeader("X-Forwarded-For"));
+
+        String clientIp = obterIp(request);
+
+        // registra ou renova sessão
         accessLogService.registrarOuRenovarConexao(
-            user, AccessContentType.MOVIE, streamId,
-            request.getRemoteAddr(),
+            user,
+            AccessContentType.MOVIE,
+            streamId,
+            clientIp,
             request.getHeader("User-Agent")
         );
 
-        definirCookieStreaming(user, response);
+
+        String token = jwtService.gerarStreamToken(user.getId(), clientIp);
 
         // redireciona pro HLS no MinIO via Nginx
-        String url = serverUrl + "/vod/" + movie.getHlsPath() + "/master.m3u8";
+        String url = String.format("%s/vod/%s/master.m3u8?sjwt=%s&id=%s",
+            serverUrl,
+            movie.getHlsPath(),
+            URLEncoder.encode(token, StandardCharsets.UTF_8),
+            streamId
+        );
+
         log.info("url redirecionada minio :" + url );
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
@@ -116,13 +128,12 @@ public class XtreamStreamController {
     }
 
     // episódio de série
-    @GetMapping("/series/{username}/{password}/{episodeId}.mp4")
+    @GetMapping("/series/{username}/{password}/{episodeId}.m3u8")
     public ResponseEntity<Void> seriesStream(
         @PathVariable String username,
         @PathVariable String password,
         @PathVariable Long episodeId,
-        HttpServletRequest request,
-        HttpServletResponse response
+        HttpServletRequest request
     ) {
         var user = authService.autenticarRetornandoUsuario(username, password);
 
@@ -141,26 +152,41 @@ public class XtreamStreamController {
             throw new NotFoundException("Arquivo não disponível");
         }
 
+        log.info("IP capturado: {} | X-Forwarded-For: {}", 
+        request.getRemoteAddr(), 
+        request.getHeader("X-Forwarded-For"));
+
+        String clientIp = obterIp(request);
+
+        // registra ou renova sessão
         accessLogService.registrarOuRenovarConexao(
-            user, AccessContentType.EPISODE, episodeId,
-            request.getRemoteAddr(),
+            user,
+            AccessContentType.EPISODE,
+            episodeId,
+            clientIp,
             request.getHeader("User-Agent")
         );
 
-        definirCookieStreaming(user, response);
+        String token = jwtService.gerarStreamToken(user.getId(), clientIp);
+        
+        String url = String.format("%s/vod/%s/master.m3u8?sjwt=%s&id=%s",
+            serverUrl,
+            episode.getHlsPath(),
+            URLEncoder.encode(token, StandardCharsets.UTF_8),
+            episodeId
+        );
 
-        String url = "/vod/" + episode.getHlsPath() + "/master.m3u8";
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();
     }
 
-    private void definirCookieStreaming(User user, HttpServletResponse response) {
-        String token = jwtService.gerarStreamToken(user.getId());
-        Cookie cookie = new Cookie("stream_token", token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/vod");
-        cookie.setMaxAge(4 * 3600);
-        response.addCookie(cookie);
+    private String obterIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
+
 }

@@ -7,7 +7,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 import com.duduzgomes.server_iptv.domain.admin.Admin;
-
 import java.time.Instant;
 
 @Service
@@ -35,15 +34,16 @@ public class JwtService {
             .getTokenValue();
     }
 
-    public String gerarStreamToken(Long userId) {
+    public String gerarStreamToken(Long userId, String clientIp) {
         var now = Instant.now();
 
         var claims = JwtClaimsSet.builder()
             .issuer("iptv-server")
             .subject(userId.toString())
             .claim("type", "stream")
+            .claim("ip", clientIp)
             .issuedAt(now)
-            .expiresAt(now.plusSeconds(4 * 3600))
+            .expiresAt(now.plusSeconds(3 * 3600))
             .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims))
