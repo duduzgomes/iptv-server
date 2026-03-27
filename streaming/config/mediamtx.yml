@@ -1,8 +1,10 @@
-hlsAddress: :9000
+hlsAddress: :8888
 hlsAlwaysRemux: yes
-hlsSegmentDuration: 2s
-hlsSegmentCount: 8
+hlsSegmentDuration: 1s
+hlsSegmentCount: 7
+hlsAllowOrigins:
+  - "*"
 
 paths:
-  all_others: # aceita qualquer stream key
+  "~^live/.*":
     source: publisher
