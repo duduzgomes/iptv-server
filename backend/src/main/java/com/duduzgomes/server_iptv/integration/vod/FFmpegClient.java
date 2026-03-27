@@ -1,8 +1,9 @@
-package com.duduzgomes.server_iptv.domain.vod;
+package com.duduzgomes.server_iptv.integration.vod;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -10,8 +11,9 @@ import com.duduzgomes.server_iptv.integration.minio.MinioService;
 
 @Slf4j
 @Component
+@Primary
 @RequiredArgsConstructor
-public class FFmpegClient {
+public class FFmpegClient implements IVodTranscoder {
 
     private final RestClient restClient;
     private final MinioService minioService;

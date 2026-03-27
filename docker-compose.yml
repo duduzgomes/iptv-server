@@ -59,7 +59,7 @@ services:
     ports:
       - "1935:1935"
     expose:
-      - "8080"
+      - "8888"
     volumes:
       - ./streaming/config/mediamtx.yml:/mediamtx.yml
     networks:
@@ -95,6 +95,7 @@ services:
       STREAMING_FFMPEG_SERVICE_URL: http://ffmpeg-service:8081
       HLS_PATH: /hls
       HLS_BASE_URL: ${HLS_BASE_URL}
+      STREAMING_LIVE_SERVICE_URL: http://live-service:8082
       FILES_BASE_URL: ${FILES_BASE_URL}
     volumes:
       - ./streaming/hls:/hls
@@ -132,6 +133,21 @@ services:
       - spring-boot
       - mediamtx
       - minio
+      - live-service
+    networks:
+      - iptv-network
+
+  live-service:
+    build: ./live-service
+    expose:
+      - "8082"
+    environment:
+      STREAMING_HLS_PATH: /hls
+      STREAMING_MEDIAMTX_URL: rtmp://mediamtx:1935
+    volumes:
+      - ./streaming/hls:/hls
+    depends_on:
+      - mediamtx
     networks:
       - iptv-network
 

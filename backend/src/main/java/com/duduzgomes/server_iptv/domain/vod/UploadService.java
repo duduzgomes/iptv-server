@@ -8,6 +8,7 @@ import com.duduzgomes.server_iptv.domain.movie.MovieRepository;
 import com.duduzgomes.server_iptv.domain.series.episode.EpisodeRepository;
 import com.duduzgomes.server_iptv.domain.vod.dto.IniciarUploadResponseDTO;
 import com.duduzgomes.server_iptv.integration.minio.MinioService;
+import com.duduzgomes.server_iptv.integration.vod.IVodTranscoder;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,11 +21,12 @@ public class UploadService {
     private final MovieRepository   movieRepository;
     private final EpisodeRepository episodeRepository;
     private final MinioService      minioService;
-    private final FFmpegClient      ffmpegClient;
+    private final IVodTranscoder    vodTranscoder;
 
     // inicia upload de filme — retorna uploadId + presigned URLs
     @Transactional
     public IniciarUploadResponseDTO iniciarUploadFilme(Long movieId, int totalChunks) {
+        
         var movie = movieRepository.findById(movieId)
             .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
 
@@ -49,9 +51,8 @@ public class UploadService {
 
     // conclui upload de filme
     @Transactional
-    public void concluirUploadFilme(Long movieId,
-                                     String uploadId,
-                                     List<String> etags) {
+    public void concluirUploadFilme(Long movieId, String uploadId, List<String> etags) {
+
         var movie = movieRepository.findById(movieId)
             .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
 
@@ -66,7 +67,8 @@ public class UploadService {
             log.info("Upload do filme {} concluído — acionando FFmpeg", movieId);
             movie.setVodStatus(VodStatus.PROCESSING);
             movieRepository.save(movie);
-            ffmpegClient.transcodarFilme(movieId, movie.getMinioKey());
+
+            vodTranscoder.transcodarFilme(movieId, movie.getMinioKey());
 
         } catch (Exception e) {
             movie.setVodStatus(VodStatus.ERROR);
@@ -78,8 +80,8 @@ public class UploadService {
 
     // inicia upload de episódio
     @Transactional
-    public IniciarUploadResponseDTO iniciarUploadEpisodio(Long episodeId,
-                                                           int totalChunks) {
+    public IniciarUploadResponseDTO iniciarUploadEpisodio(Long episodeId,  int totalChunks) {
+
         var episode = episodeRepository.findById(episodeId)
             .orElseThrow(() -> new NotFoundException("Episódio não encontrado"));
 
@@ -100,9 +102,8 @@ public class UploadService {
 
     // conclui upload de episódio
     @Transactional
-    public void concluirUploadEpisodio(Long episodeId,
-                                        String uploadId,
-                                        List<String> etags) {
+    public void concluirUploadEpisodio(Long episodeId, String uploadId, List<String> etags) {
+
         var episode = episodeRepository.findById(episodeId)
             .orElseThrow(() -> new NotFoundException("Episódio não encontrado"));
 
@@ -114,7 +115,8 @@ public class UploadService {
             log.info("Upload do episódio {} concluído — acionando FFmpeg", episodeId);
             episode.setVodStatus(VodStatus.PROCESSING);
             episodeRepository.save(episode);
-            ffmpegClient.transcodarEpisodio(episodeId, episode.getMinioKey());
+
+            vodTranscoder.transcodarEpisodio(episodeId, episode.getMinioKey());
 
         } catch (Exception e) {
             episode.setVodStatus(VodStatus.ERROR);

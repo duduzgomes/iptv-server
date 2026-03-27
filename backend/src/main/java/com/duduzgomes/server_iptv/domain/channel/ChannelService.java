@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import com.duduzgomes.server_iptv.domain.category.Category;
 import com.duduzgomes.server_iptv.domain.category.CategoryRepository;
 import com.duduzgomes.server_iptv.domain.category.ContentType;
+import com.duduzgomes.server_iptv.integration.live.ILiveStreamManager;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import com.duduzgomes.server_iptv.xtream.dto.CategoryDTO;
 import com.duduzgomes.server_iptv.xtream.dto.LiveStreamDTO;
@@ -18,6 +19,7 @@ public class ChannelService {
 
     private final ChannelRepository channelRepository;
     private final CategoryRepository categoryRepository;
+    private final ILiveStreamManager liveStreamManager;
 
     public List<CategoryDTO> listarCategorias() {
         return categoryRepository
@@ -43,10 +45,11 @@ public class ChannelService {
     public Channel criar(Long categoryId, String name, String logoUrl,
                         String sourceUrl, String streamKey,
                         String epgChannelId, Integer num) {
+
         var category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new NotFoundException("Categoria não encontrada"));
 
-        return channelRepository.save(Channel.builder()
+        Channel canal =  channelRepository.save(Channel.builder()
             .name(name)
             .category(category)
             .logoUrl(logoUrl)
@@ -56,6 +59,10 @@ public class ChannelService {
             .num(num)
             .active(true)
             .build());
+
+        liveStreamManager.iniciarCanal(canal.getId(), canal.getStreamKey());
+
+        return canal;
     }
 
     @Transactional
@@ -78,6 +85,13 @@ public class ChannelService {
             .orElseThrow(() -> new NotFoundException("Canal não encontrado"));
         channel.setActive(active);
         channelRepository.save(channel);
+
+        if (active){
+            liveStreamManager.iniciarCanal(channel.getId(), channel.getStreamKey());
+            return;
+        }
+
+        liveStreamManager.pararCanal(id);
     }
 
     @Transactional

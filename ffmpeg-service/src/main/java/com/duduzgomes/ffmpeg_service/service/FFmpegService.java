@@ -29,26 +29,35 @@ public class FFmpegService {
         // gera master.m3u8
         gerarMasterPlaylist(outputDir);
 
-        // monta comando FFmpeg
+
         List<String> comando = List.of(
             ffmpegPath,
             "-i", inputUrl,
 
+            "-filter_complex",
+            "[0:v]split=2[v1][v2];" +
+            "[v1]scale=1280:720[v720];" +
+            "[v2]scale=854:480[v480]",
+
             // 720p
-            "-map", "0:v", "-map", "0:a",
-            "-c:v", "libx264", "-preset", "veryfast",
-            "-b:v", "1500k", "-vf", "scale=1280:720", "-r", "30",
+            "-map", "[v720]", "-map", "0:a",
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "23",
+            "-r", "30",
             "-c:a", "aac", "-b:a", "128k",
             "-f", "hls",
             "-hls_time", String.valueOf(segmentDuration),
-            "-hls_list_size", "0",           // 0 = mantém todos os segmentos (VOD)
+            "-hls_list_size", "0",
             "-hls_segment_filename", outputDir + "/720p/seg%03d.ts",
             outputDir + "/720p/index.m3u8",
 
             // 480p
-            "-map", "0:v", "-map", "0:a",
-            "-c:v", "libx264", "-preset", "veryfast",
-            "-b:v", "800k", "-vf", "scale=854:480", "-r", "30",
+            "-map", "[v480]", "-map", "0:a",
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "23",
+            "-r", "30",
             "-c:a", "aac", "-b:a", "96k",
             "-f", "hls",
             "-hls_time", String.valueOf(segmentDuration),

@@ -66,8 +66,14 @@ public class XtreamStreamController {
             request.getHeader("User-Agent")
         );
 
-        String url = serverUrl + "/" + channel.getStreamKey() + "/master.m3u8";
-    
+        String token = jwtService.gerarStreamToken(user.getId(), clientIp);
+
+        String url = String.format("%s/mediamtx/live/%s/index.m3u8?id=%s",
+            serverUrl,
+            channel.getStreamKey(),
+            streamId
+        );
+            
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();

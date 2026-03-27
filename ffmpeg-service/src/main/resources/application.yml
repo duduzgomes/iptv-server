@@ -15,7 +15,7 @@ minio:
   bucket: ${MINIO_BUCKET:vod}
 
 streaming:
-  ffmpeg-path: ${FFMPEG_PATH:ffmpeg}
+  ffmpeg-path: /usr/bin/ffmpeg
   hls-segment-duration: 2
   hls-segment-count: 8
 
