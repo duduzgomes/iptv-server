@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import com.duduzgomes.server_iptv.domain.vod.dto.ConcluirUploadRequestDTO;
 import com.duduzgomes.server_iptv.domain.vod.dto.IniciarUploadResponseDTO;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 @RestController
 @RequestMapping("/admin/upload")
 @RequiredArgsConstructor
@@ -18,7 +21,7 @@ public class UploadController {
     @PostMapping("/movies/{movieId}/iniciar")
     public ResponseEntity<IniciarUploadResponseDTO> iniciarFilme(
         @PathVariable Long movieId,
-        @RequestParam int totalChunks
+        @RequestParam @Min(1) @Max(10000) int totalChunks
     ) {
         return ResponseEntity.ok(
             uploadService.iniciarUploadFilme(movieId, totalChunks)

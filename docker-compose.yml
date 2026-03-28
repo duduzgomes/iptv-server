@@ -25,7 +25,7 @@ services:
       - "9000"
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
       MINIO_DOMAIN: localhost
     volumes:
       - minio-data:/data
@@ -85,17 +85,19 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       TMDB_API_KEY: ${TMDB_API_KEY}
       SERVER_URL: ${SERVER_URL:-localhost}
+      SERVER_TIMEZONE: ${SERVER_TIMEZONE:-America/Sao_Paulo}
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
       ADMIN_DEFAULT_USERNAME: ${ADMIN_DEFAULT_USERNAME:-admin}
-      ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD:-admin123}
-      ADMIN_DEFAULT_EMAIL: ${ADMIN_DEFAULT_EMAIL:-admin@iptv.com}
+      ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD}
+      ADMIN_DEFAULT_EMAIL: ${ADMIN_DEFAULT_EMAIL}
       MINIO_URL: http://minio:9000
       MINIO_PUBLIC_URL: http://localhost:9000
       MINIO_USER: ${MINIO_USER:-minioadmin}
-      MINIO_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
+      MINIO_PASSWORD: ${MINIO_PASSWORD}
       STREAMING_FFMPEG_SERVICE_URL: http://ffmpeg-service:8081
+      STREAMING_LIVE_SERVICE_URL: http://live-service:8082
       HLS_PATH: /hls
       HLS_BASE_URL: ${HLS_BASE_URL}
-      STREAMING_LIVE_SERVICE_URL: http://live-service:8082
       FILES_BASE_URL: ${FILES_BASE_URL}
     volumes:
       - ./streaming/hls:/hls
@@ -110,8 +112,9 @@ services:
     environment:
       MINIO_URL: http://minio:9000
       MINIO_USER: ${MINIO_USER:-minioadmin}
-      MINIO_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
+      MINIO_PASSWORD: ${MINIO_PASSWORD}
       CALLBACK_URL: http://spring-boot:8080/internal/transcode/callback
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
     depends_on:
       minio:
         condition: service_healthy

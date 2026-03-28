@@ -54,10 +54,10 @@ public class XtreamAuthService {
 
     public User autenticarRetornandoUsuario(String username, String password) {
         User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UnauthorizedException("Usuário não encontrado"));
+            .orElseThrow(() -> new UnauthorizedException("Credenciais inválidas"));
 
         if (!password.equals(user.getPassword())) {
-            throw new UnauthorizedException("Senha inválida");
+            throw new UnauthorizedException("Credenciais inválidas");
         }
 
         if (!user.getActive()) {
@@ -90,7 +90,7 @@ public class XtreamAuthService {
             .build();
 
         var serverInfo = ServerInfoDTO.builder()
-            .url(serverUrl)
+            .url(serverUrl.replace("https://", ""))
             .port(serverPort)
             .httpsPort(httpsPort)
             .serverProtocol(serverProtocol)

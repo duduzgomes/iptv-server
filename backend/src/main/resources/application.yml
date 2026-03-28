@@ -34,6 +34,9 @@ jwt:
   private-key-location: classpath:certs/private.pem
   expiration: 3600
 
+internal:
+  secret: ${INTERNAL_SECRET}
+
 streaming:
   ffmpeg-service-url: ${STREAMING_FFMPEG_SERVICE_URL:http://ffmpeg-service:8081}
   vod-base-url: ${VOD_BASE_URL:http://localhost/vod}
@@ -48,14 +51,14 @@ tmdb:
 admin:
   default:
     username: ${ADMIN_DEFAULT_USERNAME:admin}
-    password: ${ADMIN_DEFAULT_PASSWORD:admin123}
-    email: ${ADMIN_DEFAULT_EMAIL:admin@iptv.com
+    password: ${ADMIN_DEFAULT_PASSWORD}
+    email: ${ADMIN_DEFAULT_EMAIL}
 
 minio:
   url: ${MINIO_URL:http://localhost:9000}
   public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
   user: ${MINIO_USER:minioadmin}
-  password: ${MINIO_PASSWORD:minioadmin}
+  password: ${MINIO_PASSWORD}
   bucket: vod
 
 xtream:
@@ -67,7 +70,7 @@ xtream:
     https-port: ${SERVER_HTTPS_PORT:443}
     protocol: ${SERVER_PROTOCOL:http}
     rtmp-port: ${SERVER_RTMP_PORT:1935}
-    timezone: America/Sao_Paulo
+    timezone: ${SERVER_TIMEZONE:America/Sao_Paulo}
 
   hls-base-url: ${HLS_BASE_URL:http://localhost:8080/hls}
   files-base-url: ${FILES_BASE_URL:http://localhost:8080/files}

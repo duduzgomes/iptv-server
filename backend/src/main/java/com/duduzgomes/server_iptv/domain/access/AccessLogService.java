@@ -25,9 +25,8 @@ public class AccessLogService {
     public void registrarOuRenovarConexao(User user,
                                           AccessContentType contentType,
                                           Long contentId,
-                                          String ip,
-                                          String userAgent) {
-        String ipUserAgent = ip + "|" + userAgent;
+                                          String ip) {
+        String ipUserAgent = ip + "|" + contentId;
         LocalDateTime novaExpiracao = LocalDateTime.now()
             .plusHours(sessionDurationHours);
 

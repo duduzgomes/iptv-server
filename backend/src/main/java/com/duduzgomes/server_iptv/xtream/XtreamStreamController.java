@@ -2,7 +2,6 @@ package com.duduzgomes.server_iptv.xtream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,8 +61,7 @@ public class XtreamStreamController {
             user,
             AccessContentType.LIVE,
             streamId,
-            clientIp,
-            request.getHeader("User-Agent")
+            clientIp
         );
 
         String token = jwtService.gerarStreamToken(user.getId(), clientIp);
@@ -101,10 +99,6 @@ public class XtreamStreamController {
             throw new NotFoundException("Filme ainda não está disponível");
         }
 
-        log.info("IP capturado: {} | X-Forwarded-For: {}", 
-        request.getRemoteAddr(), 
-        request.getHeader("X-Forwarded-For"));
-
         String clientIp = obterIp(request);
 
         // registra ou renova sessão
@@ -112,10 +106,8 @@ public class XtreamStreamController {
             user,
             AccessContentType.MOVIE,
             streamId,
-            clientIp,
-            request.getHeader("User-Agent")
+            clientIp
         );
-
 
         String token = jwtService.gerarStreamToken(user.getId(), clientIp);
 
@@ -127,7 +119,7 @@ public class XtreamStreamController {
             streamId
         );
 
-        log.info("url redirecionada minio :" + url );
+        log.debug("url redirecionada minio :" + url );
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();
@@ -158,10 +150,6 @@ public class XtreamStreamController {
             throw new NotFoundException("Arquivo não disponível");
         }
 
-        log.info("IP capturado: {} | X-Forwarded-For: {}", 
-        request.getRemoteAddr(), 
-        request.getHeader("X-Forwarded-For"));
-
         String clientIp = obterIp(request);
 
         // registra ou renova sessão
@@ -169,8 +157,7 @@ public class XtreamStreamController {
             user,
             AccessContentType.EPISODE,
             episodeId,
-            clientIp,
-            request.getHeader("User-Agent")
+            clientIp
         );
 
         String token = jwtService.gerarStreamToken(user.getId(), clientIp);
@@ -188,11 +175,10 @@ public class XtreamStreamController {
     }
 
     private String obterIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
         }
         return request.getRemoteAddr();
     }
-
 }

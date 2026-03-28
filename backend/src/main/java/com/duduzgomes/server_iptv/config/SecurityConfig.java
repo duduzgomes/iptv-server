@@ -81,6 +81,8 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/player_api.php").permitAll()
+                .requestMatchers("/admin/admins/**").hasRole("SUPERADMIN")
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
                 .requestMatchers("/live/**").permitAll()
                 .requestMatchers("/movie/**").permitAll()
                 .requestMatchers("/series/**").permitAll()

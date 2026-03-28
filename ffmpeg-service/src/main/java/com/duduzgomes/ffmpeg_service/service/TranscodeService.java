@@ -25,6 +25,9 @@ public class TranscodeService {
     @Value("${callback.url}")
     private String callbackUrl;
 
+    @Value("${internal.secret}")
+    private String internalSecret;
+
     // executor virtual — não bloqueia o servidor durante transcodificação
     private final Executor executor = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -111,6 +114,7 @@ public class TranscodeService {
         try {
             restClient.post()
                 .uri(callbackUrl)
+                .header("X-Internal-Secret", internalSecret)
                 .body(callback)
                 .retrieve()
                 .toBodilessEntity();

@@ -19,7 +19,7 @@ public class AdminDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var admin = adminRepository.findByUsername(username)
             .orElseThrow(() ->
-                new UsernameNotFoundException("Admin não encontrado: " + username));
+                new UsernameNotFoundException("Credenciais inválidas" + username));
 
         return User.builder()
             .username(admin.getUsername())
