@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.duduzgomes.server_iptv.domain.admin.dto.AdminResponse;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import java.util.List;
 
@@ -61,5 +62,17 @@ public class AdminService {
             throw new NotFoundException("Admin não encontrado");
         }
         adminRepository.deleteById(id);
+    }
+
+    public AdminResponse toDTO(Admin admin){
+        return AdminResponse.builder()
+            .id(admin.getId())
+            .username( admin.getUsername())
+            .email( admin.getEmail())
+            .role(admin.getRole())
+            .active(admin.getActive()) 
+            .createdAt(admin.getCreatedAt()) 
+            .updatedAt(admin.getUpdatedAt())
+            .build();
     }
 }

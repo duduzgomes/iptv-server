@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+import com.duduzgomes.server_iptv.domain.admin.dto.AdminResponse;
 import java.util.List;
 
 @RestController
@@ -27,14 +27,16 @@ public class AdminController {
     @PostMapping
     @PreAuthorize("hasRole('SUPERADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Admin> criar(@Valid @RequestBody CriarAdminRequest request) {
+    public ResponseEntity<AdminResponse> criar(@Valid @RequestBody CriarAdminRequest request) {
+
+        Admin admin  = adminService.criar(
+            request.username(),
+            request.password(),
+            request.email(),
+            request.role());
+
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(adminService.criar(
-                request.username(),
-                request.password(),
-                request.email(),
-                request.role()
-            ));
+            .body(adminService.toDTO(admin));
     }
 
     @PatchMapping("/{id}/senha")

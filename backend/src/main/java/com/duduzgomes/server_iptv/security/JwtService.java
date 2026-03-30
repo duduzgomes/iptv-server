@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 import com.duduzgomes.server_iptv.domain.admin.Admin;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,8 +25,7 @@ public class JwtService {
         var claims = JwtClaimsSet.builder()
             .issuer("iptv-server")
             .subject(admin.getUsername())
-            .claim("role", admin.getRole().name())
-            .claim("adminId", admin.getId())
+            .claim("roles", List.of(admin.getRole()))
             .issuedAt(now)
             .expiresAt(now.plusSeconds(expiration))
             .build();
