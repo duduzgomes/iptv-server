@@ -3,8 +3,8 @@ package com.duduzgomes.server_iptv.domain.vod;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.duduzgomes.server_iptv.domain.movie.MovieRepository;
+import org.springframework.transaction.annotation.Transactional;
 import com.duduzgomes.server_iptv.domain.series.episode.EpisodeRepository;
 import com.duduzgomes.server_iptv.domain.vod.dto.IniciarUploadResponseDTO;
 import com.duduzgomes.server_iptv.integration.minio.MinioService;
@@ -50,7 +50,6 @@ public class UploadService {
     }
 
     // conclui upload de filme
-    @Transactional
     public void concluirUploadFilme(Long movieId, String uploadId, List<String> etags) {
 
         var movie = movieRepository.findById(movieId)
@@ -64,10 +63,6 @@ public class UploadService {
             movie.setVodStatus(VodStatus.PROCESSING);
             movieRepository.save(movie);
 
-            log.info("Upload do filme {} concluído — acionando FFmpeg", movieId);
-            movie.setVodStatus(VodStatus.PROCESSING);
-            movieRepository.save(movie);
-
             vodTranscoder.transcodarFilme(movieId, movie.getMinioKey());
 
         } catch (Exception e) {
@@ -77,9 +72,9 @@ public class UploadService {
             throw new RuntimeException("Erro ao concluir upload: " + e.getMessage());
         }
     }
-
-    // inicia upload de episódio
+     
     @Transactional
+    // inicia upload de episódio
     public IniciarUploadResponseDTO iniciarUploadEpisodio(Long episodeId,  int totalChunks) {
 
         var episode = episodeRepository.findById(episodeId)
@@ -101,7 +96,7 @@ public class UploadService {
     }
 
     // conclui upload de episódio
-    @Transactional
+
     public void concluirUploadEpisodio(Long episodeId, String uploadId, List<String> etags) {
 
         var episode = episodeRepository.findById(episodeId)
@@ -109,10 +104,6 @@ public class UploadService {
 
         try {
             minioService.concluirMultipartUpload(episode.getMinioKey(), uploadId, etags);
-            episode.setVodStatus(VodStatus.PROCESSING);
-            episodeRepository.save(episode);
-
-            log.info("Upload do episódio {} concluído — acionando FFmpeg", episodeId);
             episode.setVodStatus(VodStatus.PROCESSING);
             episodeRepository.save(episode);
 

@@ -7,6 +7,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,10 +37,15 @@ public class MinioService {
     // inicia multipart — MinioAsyncClient expõe createMultipartUploadAsync
     public String iniciarMultipartUpload(String objectKey) {
         try {
+            Multimap<String, String> headers = HashMultimap.create();
+            headers.put("Content-Type", "video/mp4");
+
             var response = minioAsyncClient.createMultipartUploadAsync(
-                bucket, null, objectKey, null, null
+                bucket, null, objectKey, headers, null
             ).get();
+
             return response.result().uploadId();
+            
         } catch (Exception e) {
             throw new RuntimeException("Erro ao iniciar upload: " + e.getMessage());
         }

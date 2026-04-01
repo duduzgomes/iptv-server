@@ -34,15 +34,17 @@ public class XtreamStreamController {
     private final AccessLogService   accessLogService;
     private final JwtService         jwtService;
 
+
     @Value("${server.url:http://localhost}")
     private String serverUrl;
 
     // canal ao vivo
-    @GetMapping("/live/{username}/{password}/{streamId}.m3u8")
+    @GetMapping("/live/{username}/{password}/{streamId}.{extension}")
     public ResponseEntity<Void> liveStream(
         @PathVariable String username,
         @PathVariable String password,
         @PathVariable Long streamId,
+        @PathVariable String extension,
         HttpServletRequest request
     ) {
         User user = authService.autenticarRetornandoUsuario(username, password);
@@ -64,7 +66,7 @@ public class XtreamStreamController {
             clientIp
         );
 
-        String token = jwtService.gerarStreamToken(user.getId(), clientIp);
+        // String token = jwtService.gerarStreamToken(user.getId(), clientIp);
 
         String url = String.format("%s/mediamtx/live/%s/index.m3u8?id=%s",
             serverUrl,
@@ -78,11 +80,12 @@ public class XtreamStreamController {
     }
 
     // filme
-    @GetMapping("/movie/{username}/{password}/{streamId}.m3u8")
+    @GetMapping("/movie/{username}/{password}/{streamId}.{extension}")
     public ResponseEntity<Void> movieStream(
         @PathVariable String username,
         @PathVariable String password,
         @PathVariable Long streamId,
+        @PathVariable String extension,
         HttpServletRequest request
     ) {
         var user = authService.autenticarRetornandoUsuario(username, password);
@@ -109,18 +112,35 @@ public class XtreamStreamController {
             clientIp
         );
 
+        if(extension.equals("mp4")){
+
+            String token = jwtService.gerarStreamToken(user.getId(), clientIp);
+
+            // redireciona pro HLS no MinIO via Nginx
+            String url = String.format("%s/vod-mp4/%s?sjwt=%s&id=%s",
+                serverUrl,
+                movie.getMinioKey(),
+                URLEncoder.encode(token, StandardCharsets.UTF_8),
+                streamId
+            );
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(url))
+                .build();
+        }
+
         String token = jwtService.gerarStreamToken(user.getId(), clientIp);
 
         // redireciona pro HLS no MinIO via Nginx
-        String url = String.format("%s/vod/%s/master.m3u8?sjwt=%s&id=%s",
+        String url = String.format("%s/vod-hls/%s/master.m3u8?sjwt=%s&id=%s",
             serverUrl,
             movie.getHlsPath(),
             URLEncoder.encode(token, StandardCharsets.UTF_8),
             streamId
         );
 
-        log.debug("url redirecionada minio :" + url );
-        return ResponseEntity.status(HttpStatus.FOUND)
+        return ResponseEntity
+            .status(HttpStatus.FOUND)
             .location(URI.create(url))
             .build();
     }

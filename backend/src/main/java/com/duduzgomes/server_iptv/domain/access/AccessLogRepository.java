@@ -36,17 +36,13 @@ public interface AccessLogRepository extends JpaRepository<AccessLog, Long> {
     @Query("""
         SELECT a FROM AccessLog a
         WHERE a.user.id = :userId
-        AND a.ipUserAgent = :ipUserAgent
-        AND a.contentType = :contentType
-        AND a.contentId = :contentId
+        AND a.ipAddress = :ipAddress
         AND a.disconnectedAt IS NULL
         AND a.expiresAt > CURRENT_TIMESTAMP
         """)
-    Optional<AccessLog> findActiveByUserAndIpAndContent(
+    Optional<AccessLog> findActiveByUserAndIpAndIpAdress(
         Long userId,
-        String ipUserAgent,
-        AccessContentType contentType,
-        Long contentId
+        String ipAddress
     );
 
     @Modifying

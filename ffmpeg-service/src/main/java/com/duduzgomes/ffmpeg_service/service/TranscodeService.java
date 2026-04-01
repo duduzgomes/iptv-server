@@ -53,16 +53,11 @@ public class TranscodeService {
             // 2. faz upload de todos os segmentos pro MinIO
             uploadDiretorioParaMinIO(outputDir, hlsPath);
 
-            // 3. apaga arquivo original do MinIO (processing/)
-            String originalKey = "processing/" +
-                request.contentType().toLowerCase() + "s/" +
-                request.contentId() + "/original.mp4";
-            minioService.deletar(originalKey);
 
             log.info("Transcodificação concluída — {} id: {}",
                 request.contentType(), request.contentId());
 
-            // 4. notifica Spring Boot
+            // 3. notifica Spring Boot
             notificar(new TranscodeCallbackDTO(
                 request.contentId(),
                 request.contentType(),

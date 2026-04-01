@@ -98,7 +98,7 @@ public class XtreamAuthService {
             .timestamp(toTimestamp(now))
             .timezone(timezone)
             .timeNow(now.format(formatter))
-            .process(true)            // ← adiciona
+            .process(true)         
             .build();
 
         return AuthResponseDTO.builder()

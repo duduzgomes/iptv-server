@@ -19,6 +19,9 @@ public record VodStreamDTO(
     @JsonProperty("stream_icon")
     String streamIcon,
 
+    @JsonProperty("container_extension")
+    String containerExtension,
+
     @JsonProperty("category_id")
     String categoryId,
 

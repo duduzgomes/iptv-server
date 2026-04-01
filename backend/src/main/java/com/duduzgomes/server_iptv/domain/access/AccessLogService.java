@@ -26,15 +26,14 @@ public class AccessLogService {
                                           AccessContentType contentType,
                                           Long contentId,
                                           String ip) {
-        String ipUserAgent = ip + "|" + contentId;
+        String ipUserAgent = user.getId() + "|" + ip;
+
         LocalDateTime novaExpiracao = LocalDateTime.now()
             .plusHours(sessionDurationHours);
 
-        // verifica se já existe sessão ativa com mesmo IP + usuário + conteúdo
+        // verifica se já existe sessão ativa com mesmo usuário + IP 
         var sessaoExistente = accessLogRepository
-            .findActiveByUserAndIpAndContent(
-                user.getId(), ipUserAgent, contentType, contentId
-            );
+            .findActiveByUserAndIpAndIpAdress(user.getId(), ip);
 
         if (sessaoExistente.isPresent()) {
             // renova a sessão existente
