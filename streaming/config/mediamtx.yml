@@ -1,9 +1,12 @@
-hlsAddress: :8888
-hlsAlwaysRemux: yes
-hlsSegmentDuration: 1s
-hlsSegmentCount: 7
-hlsAllowOrigins:
-  - "*"
+rtmpAddress: :1935
+hls: false
+
+authMethod: http
+authHTTPAddress: http://spring-boot:8080/internal/mediamtx/auth
+authHTTPExclude:
+  - action: api
+  - action: metrics
+  - action: pprof
 
 paths:
   "~^live/.*":
