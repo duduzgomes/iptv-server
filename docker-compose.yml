@@ -4,13 +4,13 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: ${DB_NAME:-iptv}
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-iptv}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,9 +24,8 @@ services:
     expose:
       - "9000"
     environment:
-      MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
-      MINIO_DOMAIN: localhost
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
@@ -56,6 +55,9 @@ services:
 
   mediamtx:
     image: bluenviron/mediamtx:latest
+    environment:
+      MEDIAMTX_RTMP_PUBLISH_USER: ${MEDIAMTX_RTMP_PUBLISH_USER}
+      MEDIAMTX_RTMP_PUBLISH_PASS: ${MEDIAMTX_RTMP_PUBLISH_PASS}
     ports:
       - "1935:1935"
     expose:
@@ -77,28 +79,31 @@ services:
       minio-setup:
         condition: service_completed_successfully
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-iptv}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      TMDB_API_KEY: ${TMDB_API_KEY}
-      SERVER_URL: ${SERVER_URL:-localhost}
-      SERVER_TIMEZONE: ${SERVER_TIMEZONE:-America/Sao_Paulo}
       INTERNAL_SECRET: ${INTERNAL_SECRET}
-      ADMIN_DEFAULT_USERNAME: ${ADMIN_DEFAULT_USERNAME:-admin}
+      STREAMING_FFMPEG_SERVICE_URL: ${STREAMING_FFMPEG_SERVICE_URL}
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      ADMIN_DEFAULT_USERNAME: ${ADMIN_DEFAULT_USERNAME}
       ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD}
       ADMIN_DEFAULT_EMAIL: ${ADMIN_DEFAULT_EMAIL}
-      MINIO_URL: http://minio:9000
-      MINIO_PUBLIC_URL: http://localhost:9000
-      MINIO_USER: ${MINIO_USER:-minioadmin}
+      MINIO_URL: ${MINIO_URL}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      MINIO_USER: ${MINIO_USER}
       MINIO_PASSWORD: ${MINIO_PASSWORD}
-      STREAMING_FFMPEG_SERVICE_URL: http://ffmpeg-service:8081
-      STREAMING_LIVE_SERVICE_URL: http://live-service:8082
-      HLS_PATH: /hls
-      HLS_BASE_URL: ${HLS_BASE_URL}
-      FILES_BASE_URL: ${FILES_BASE_URL}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      XSTREAM_SESSION_DURATION_HOURS: ${XSTREAM_SESSION_DURATION_HOURS}
+      XSTREAM_SERVER_PORT: ${XSTREAM_SERVER_PORT}
+      SERVER_URL: ${SERVER_URL}
+      SERVER_HTTPS_PORT: ${SERVER_HTTPS_PORT}
+      SERVER_PROTOCOL: ${SERVER_PROTOCOL}
+      SERVER_RTMP_PORT: ${SERVER_RTMP_PORT}
+      SERVER_TIMEZONE: ${SERVER_TIMEZONE}
+      MEDIAMTX_RTMP_PUBLISH_USER: ${MEDIAMTX_RTMP_PUBLISH_USER}
+      MEDIAMTX_RTMP_PUBLISH_PASS: ${MEDIAMTX_RTMP_PUBLISH_PASS}
     volumes:
       - ./streaming/hls:/hls
       - upload-temp:/tmp/uploads
@@ -110,10 +115,11 @@ services:
     expose:
       - "8081"
     environment:
-      MINIO_URL: http://minio:9000
-      MINIO_USER: ${MINIO_USER:-minioadmin}
+      MINIO_URL: ${MINIO_URL}
+      MINIO_USER: ${MINIO_USER}
       MINIO_PASSWORD: ${MINIO_PASSWORD}
-      CALLBACK_URL: http://spring-boot:8080/internal/transcode/callback
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      STREAMING_CALLBACK_URL: ${STREAMING_CALLBACK_URL}
       INTERNAL_SECRET: ${INTERNAL_SECRET}
     depends_on:
       minio:
@@ -145,8 +151,13 @@ services:
     expose:
       - "8082"
     environment:
-      STREAMING_HLS_PATH: /hls
-      STREAMING_MEDIAMTX_URL: rtmp://mediamtx:1935
+      STREAMING_FFMPEG_PATH: ${STREAMING_FFMPEG_PATH}
+      STREAMING_HLS_PATH: ${STREAMING_HLS_PATH}
+      STREAMING_HLS_SEGMENT_DURATION: ${STREAMING_HLS_SEGMENT_DURATION}
+      STREAMING_HLS_SEGMENT_COUNT: ${STREAMING_HLS_SEGMENT_COUNT}
+      MEDIAMTX_URL: ${MEDIAMTX_URL}
+      MEDIAMTX_RTMP_PUBLISH_USER: ${MEDIAMTX_RTMP_PUBLISH_USER}
+      MEDIAMTX_RTMP_PUBLISH_PASS: ${MEDIAMTX_RTMP_PUBLISH_PASS}
     volumes:
       - ./streaming/hls:/hls
     depends_on:

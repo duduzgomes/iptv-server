@@ -7,8 +7,10 @@ spring:
       enabled: true
 
 streaming:
-  ffmpeg-path: ${STREAMING_FFMPEG_PATH:ffmpeg}
-  hls-path: ${STREAMING_HLS_PATH:/hls}
-  mediamtx-url: ${STREAMING_MEDIAMTX_URL:rtmp://mediamtx:1935}
-  hls-segment-duration: ${STREAMING_HLS_SEGMENT_DURATION:2}
-  hls-segment-count: ${STREAMING_HLS_SEGMENT_COUNT:4}
+  ffmpeg-path: ${STREAMING_FFMPEG_PATH}
+  hls-path: ${STREAMING_HLS_PATH}
+  hls-segment-duration: ${STREAMING_HLS_SEGMENT_DURATION}
+  hls-segment-count: ${STREAMING_HLS_SEGMENT_COUNT}
+  mediamtx-url: ${MEDIAMTX_URL}
+  rtmp-user: ${MEDIAMTX_RTMP_PUBLISH_USER}
+  rtmp-pass: ${MEDIAMTX_RTMP_PUBLISH_PASS}

@@ -9,10 +9,10 @@ server:
   port: 8081
 
 minio:
-  url: ${MINIO_URL:http://localhost:9000}
-  user: ${MINIO_USER:minioadmin}
-  password: ${MINIO_PASSWORD:minioadmin}
-  bucket: ${MINIO_BUCKET:vod}
+  url: ${MINIO_URL}
+  user: ${MINIO_USER}
+  password: ${MINIO_PASSWORD}
+  bucket: ${MINIO_BUCKET}
 
 streaming:
   ffmpeg-path: /usr/bin/ffmpeg
@@ -20,4 +20,4 @@ streaming:
   hls-segment-count: 8
 
 callback:
-  url: ${CALLBACK_URL:http://localhost:8080/internal/transcode/callback}
+  url: ${STREAMING_CALLBACK_URL}

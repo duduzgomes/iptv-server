@@ -18,7 +18,7 @@ public class FFmpegClient implements IVodTranscoder {
     private final RestClient restClient;
     private final MinioService minioService;
 
-    @Value("${streaming.ffmpeg-service-url:http://ffmpeg-service:8081}")
+    @Value("${streaming.ffmpeg-service-url}")
     private String ffmpegServiceUrl;
 
     public void transcodarFilme(Long movieId, String minioKey) {

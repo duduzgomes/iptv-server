@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:iptv}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
 
@@ -38,8 +38,9 @@ internal:
   secret: ${INTERNAL_SECRET}
 
 streaming:
-  ffmpeg-service-url: ${STREAMING_FFMPEG_SERVICE_URL:http://ffmpeg-service:8081}
-  vod-base-url: ${VOD_BASE_URL:http://localhost/vod}
+  ffmpeg-service-url: ${STREAMING_FFMPEG_SERVICE_URL}
+  rtmp-publish-user: ${MEDIAMTX_RTMP_PUBLISH_USER}
+  rtmp-publish-pass: ${MEDIAMTX_RTMP_PUBLISH_PASS}
 
 tmdb:
   api-key: ${TMDB_API_KEY}
@@ -50,30 +51,28 @@ tmdb:
 
 admin:
   default:
-    username: ${ADMIN_DEFAULT_USERNAME:admin}
+    username: ${ADMIN_DEFAULT_USERNAME}
     password: ${ADMIN_DEFAULT_PASSWORD}
     email: ${ADMIN_DEFAULT_EMAIL}
 
 minio:
-  url: ${MINIO_URL:http://localhost:9000}
-  public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
-  user: ${MINIO_USER:minioadmin}
+  url: ${MINIO_URL}
+  public-url: ${MINIO_PUBLIC_URL}
+  user: ${MINIO_USER}
   password: ${MINIO_PASSWORD}
-  bucket: vod
+  bucket: ${MINIO_BUCKET}
 
 xtream:
   session:
-    duration-hours: ${SESSION_DURATION_HOURS:4}
+    duration-hours: ${XSTREAM_SESSION_DURATION_HOURS}
   server:
-    url: ${SERVER_URL:localhost}
-    port: ${SERVER_PORT:80}
-    https-port: ${SERVER_HTTPS_PORT:443}
-    protocol: ${SERVER_PROTOCOL:http}
-    rtmp-port: ${SERVER_RTMP_PORT:1935}
-    timezone: ${SERVER_TIMEZONE:America/Sao_Paulo}
+    url: ${SERVER_URL}
+    port: ${XSTREAM_SERVER_PORT}
+    https-port: ${SERVER_HTTPS_PORT}
+    protocol: ${SERVER_PROTOCOL}
+    rtmp-port: ${SERVER_RTMP_PORT}
+    timezone: ${SERVER_TIMEZONE}
 
-  hls-base-url: ${HLS_BASE_URL:http://localhost:8080/hls}
-  files-base-url: ${FILES_BASE_URL:http://localhost:8080/files}
 logging:
   level:
     com.duduzgomes: DEBUG
