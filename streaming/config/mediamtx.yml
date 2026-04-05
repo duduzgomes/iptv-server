@@ -11,3 +11,5 @@ authHTTPExclude:
 paths:
   "~^live/.*":
     source: publisher
+    runOnReady: curl -X POST "http://spring-boot:8080/internal/mediamtx/publish?streamKey=$MTX_PATH"
+    runOnNotReady: curl -X POST "http://spring-boot:8080/internal/mediamtx/onUnpublish?streamKey=$MTX_PATH"
