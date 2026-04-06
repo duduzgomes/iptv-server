@@ -2,6 +2,9 @@ package com.duduzgomes.server_iptv.domain.user;
 
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,7 +12,6 @@ import com.duduzgomes.server_iptv.domain.admin.AdminRepository;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import com.duduzgomes.server_iptv.shared.util.CredentialGenerator;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +21,15 @@ public class UserService {
     private final AdminRepository     adminRepository;
     private final CredentialGenerator credentialGenerator;
 
-    public List<User> listar() {
-        return userRepository.findAll();
+    public Page<User> listar(Pageable pageable) {
+        return userRepository.findAll(pageable);
     }
 
-    public User buscarPorId(Long id) {
-        return userRepository.findById(id)
+    public UserResponseDTO buscarPorId(Long id) {
+        var user = userRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
+        return toDTO(user, user.getPassword());
     }
 
     @Transactional
@@ -52,29 +56,37 @@ public class UserService {
     }
 
     @Transactional
-    public User editar(Long id,
-                       int maxConnections,
-                       int validadeDias) {
-        var user = buscarPorId(id);
+    public UserResponseDTO editar(Long id, int maxConnections, int validadeDias) {
+        var user = userRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
         user.setMaxConnections(maxConnections);
         user.setExpiresAt(LocalDateTime.now().plusDays(validadeDias));
-        return userRepository.save(user);
+
+        userRepository.save(user);
+
+        return toDTO(user, user.getPassword());
     }
 
     @Transactional
-    public User renovar(Long id, int dias) {
-        var user = buscarPorId(id);
+    public UserResponseDTO renovar(Long id, int dias) {
+        var user = userRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
         LocalDateTime base = user.getExpiresAt()
             .isBefore(LocalDateTime.now()) ? LocalDateTime.now() : user.getExpiresAt();
 
         user.setExpiresAt(base.plusDays(dias));
-        return userRepository.save(user);
+        userRepository.save(user);
+
+        return toDTO(user, user.getPassword());
     }
 
     @Transactional
     public void alterarStatus(Long id, boolean active) {
-        var user = buscarPorId(id);
+        var user = userRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
         user.setActive(active);
         userRepository.save(user);
     }

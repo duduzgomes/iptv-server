@@ -3,10 +3,13 @@ package com.duduzgomes.server_iptv.domain.user;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import org.springframework.data.domain.Sort;
+import com.duduzgomes.server_iptv.shared.dto.PageResponseDTO;
 
 @RestController
 @RequestMapping("/admin/users")
@@ -16,12 +19,18 @@ public class UserController {
     private final UserService         userService;
 
     @GetMapping
-    public ResponseEntity<List<User>> listar() {
-        return ResponseEntity.ok(userService.listar());
+    public ResponseEntity<PageResponseDTO<UserResponseDTO>> listar(
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+            PageResponseDTO.of(
+                userService.listar(pageable).map(u -> userService.toDTO(u, u.getPassword()))
+            )
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> buscar(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDTO> buscar(@PathVariable Long id) {
         return ResponseEntity.ok(userService.buscarPorId(id));
     }
 
@@ -33,17 +42,17 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> editar(
+    public ResponseEntity<UserResponseDTO> editar(
         @PathVariable Long id,
         @Valid @RequestBody EditarUserRequest request
     ) {
         return ResponseEntity.ok(
-            userService.editar(id, request.maxConnections(), request.validadeDias())
+          userService.editar(id, request.maxConnections(), request.validadeDias())
         );
     }
 
     @PatchMapping("/{id}/renovar")
-    public ResponseEntity<User> renovar(
+    public ResponseEntity<UserResponseDTO> renovar(
         @PathVariable Long id,
         @RequestParam @Min(1) int dias
     ) {
