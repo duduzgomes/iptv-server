@@ -32,13 +32,13 @@ export function CategoriesPage() {
 
   function openCreate() {
     setEditing(null);
-    reset({ name: "", type: "LIVE" });
+    reset({ name: "", contentType: "LIVE" });
     setModalOpen(true);
   }
 
   function openEdit(cat: Category) {
     setEditing(cat);
-    reset({ name: cat.name, type: cat.contentType });
+    reset({ name: cat.name, contentType: cat.contentType });
     setModalOpen(true);
   }
 
@@ -194,16 +194,16 @@ export function CategoriesPage() {
                     Tipo
                   </label>
                   <select
-                    {...register("type")}
+                    {...register("contentType")}
                     className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333]"
                   >
                     <option value="LIVE">Ao vivo</option>
                     <option value="VOD">Filme</option>
                     <option value="SERIES">Série</option>
                   </select>
-                  {errors.type && (
+                  {errors.contentType && (
                     <p className="text-[10px] text-red-500">
-                      {errors.type.message}
+                      {errors.contentType.message}
                     </p>
                   )}
                 </div>

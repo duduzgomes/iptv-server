@@ -7,7 +7,7 @@ export const categoriesApi = {
       .get<Category[]>("/admin/categories", { params: type ? { type } : {} })
       .then((r) => r.data),
 
-  create: (data: { name: string; type: string }) =>
+  create: (data: { name: string; contentType: string }) =>
     client.post<Category>("/admin/categories", data).then((r) => r.data),
 
   update: (id: number, data: { name: string }) =>
