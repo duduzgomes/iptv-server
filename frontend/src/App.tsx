@@ -1,12 +1,12 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
-import UsersPage from "./pages/UsersPage";
-import ChannelsPage from "./pages/ChannelsPage";
-import MoviesPage from "./pages/MoviesPage";
-import SeriesPage from "./pages/SeriesPage";
-import CategoriesPage from "./pages/CategoriesPage";
-import AdminsPage from "./pages/AdminsPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { UsersPage } from "./pages/UsersPage";
+import { ChannelsPage } from "./pages/ChannelsPage";
+import { MoviesPage } from "./pages/MoviesPage";
+import { SeriesPage } from "./pages/SeriesPage";
+import { CategoriesPage } from "./pages/CategoriesPage";
+import { AdminsPage } from "./pages/AdminsPage";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
