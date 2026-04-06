@@ -112,6 +112,13 @@ services:
 
   ffmpeg-service:
     build: ./ffmpeg-service
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video, utility]
     expose:
       - "8081"
     environment:
@@ -135,7 +142,7 @@ services:
       - "80:80"
       - "9000:9000"
     volumes:
-      - ./streaming/hls:/var/hls
+      - hls_data:/hls
       - ./nginx/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
       - ./backend/src/main/resources/certs/public.pem:/etc/nginx/certs/public.pem:ro
     depends_on:
@@ -148,6 +155,13 @@ services:
 
   live-service:
     build: ./live-service
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video, utility]
     expose:
       - "8082"
     environment:
@@ -159,9 +173,15 @@ services:
       MEDIAMTX_RTMP_PUBLISH_USER: ${MEDIAMTX_RTMP_PUBLISH_USER}
       MEDIAMTX_RTMP_PUBLISH_PASS: ${MEDIAMTX_RTMP_PUBLISH_PASS}
     volumes:
-      - ./streaming/hls:/hls
+      - hls_data:/hls
     depends_on:
       - mediamtx
+    networks:
+      - iptv-network
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     networks:
       - iptv-network
 
@@ -169,6 +189,7 @@ volumes:
   postgres-data:
   minio-data:
   upload-temp:
+  hls_data:
 
 networks:
   iptv-network:

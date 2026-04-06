@@ -90,7 +90,7 @@ public class XtreamAuthService {
             .build();
 
         var serverInfo = ServerInfoDTO.builder()
-            .url(serverUrl.replace("https://", ""))
+            .url(serverUrl.replaceAll("https?://", ""))
             .port(serverPort)
             .httpsPort(httpsPort)
             .serverProtocol(serverProtocol)

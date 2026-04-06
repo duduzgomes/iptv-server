@@ -53,7 +53,6 @@ public class TranscodeService {
             // 2. faz upload de todos os segmentos pro MinIO
             uploadDiretorioParaMinIO(outputDir, hlsPath);
 
-
             log.info("Transcodificação concluída — {} id: {}",
                 request.contentType(), request.contentId());
 

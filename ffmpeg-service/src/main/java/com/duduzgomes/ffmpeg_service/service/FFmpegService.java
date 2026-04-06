@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -26,45 +27,27 @@ public class FFmpegService {
         Files.createDirectories(outputDir.resolve("720p"));
         Files.createDirectories(outputDir.resolve("480p"));
 
-        // gera master.m3u8
-        gerarMasterPlaylist(outputDir);
-
-
-        List<String> comando = List.of(
+        List<String> comando = new ArrayList<>(List.of(
             ffmpegPath,
             "-i", inputUrl,
 
-            "-filter_complex",
-            "[0:v]split=2[v1][v2];" +
-            "[v1]scale=1280:720[v720];" +
-            "[v2]scale=854:480[v480]",
+            "-filter_complex", "[0:v]split=2[v720][v480];[v720]scale=1280:720[v720out];[v480]scale=854:480[v480out]",
 
-            // 720p
-            "-map", "[v720]", "-map", "0:a",
-            "-c:v", "libx264",
-            "-preset", "fast",
-            "-crf", "23",
-            "-r", "30",
-            "-c:a", "aac", "-b:a", "128k",
+            "-map", "[v720out]", "-c:v:0", "h264_nvenc", "-preset:v:0", "p4", "-b:v:0", "1500k",
+            "-map", "[v480out]", "-c:v:1", "h264_nvenc", "-preset:v:1", "p4", "-b:v:1", "800k",
+
+            "-map", "0:a", "-c:a:0", "aac", "-b:a:0", "128k",
+            "-map", "0:a", "-c:a:1", "aac", "-b:a:1", "96k",
+
             "-f", "hls",
             "-hls_time", String.valueOf(segmentDuration),
             "-hls_list_size", "0",
-            "-hls_segment_filename", outputDir + "/720p/seg%03d.ts",
-            outputDir + "/720p/index.m3u8",
-
-            // 480p
-            "-map", "[v480]", "-map", "0:a",
-            "-c:v", "libx264",
-            "-preset", "fast",
-            "-crf", "23",
-            "-r", "30",
-            "-c:a", "aac", "-b:a", "96k",
-            "-f", "hls",
-            "-hls_time", String.valueOf(segmentDuration),
-            "-hls_list_size", "0",
-            "-hls_segment_filename", outputDir + "/480p/seg%03d.ts",
-            outputDir + "/480p/index.m3u8"
-        );
+            "-hls_flags", "independent_segments",
+            "-master_pl_name", "master.m3u8",
+            "-var_stream_map", "v:0,a:0,name:720p v:1,a:1,name:480p",
+            "-hls_segment_filename", outputDir + "/%v/seg%03d.ts",
+            outputDir + "/%v/index.m3u8"
+        ));
 
         log.info("Iniciando FFmpeg para {}", outputDir);
 
@@ -81,19 +64,5 @@ public class FFmpegService {
         }
 
         log.info("FFmpeg concluído para {}", outputDir);
-    }
-
-    private void gerarMasterPlaylist(Path outputDir) throws Exception {
-        String master = """
-            #EXTM3U
-            #EXT-X-VERSION:3
-
-            #EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=1280x720
-            720p/index.m3u8
-
-            #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=854x480
-            480p/index.m3u8
-            """;
-        Files.writeString(outputDir.resolve("master.m3u8"), master);
     }
 }

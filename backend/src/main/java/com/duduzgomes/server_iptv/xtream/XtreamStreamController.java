@@ -34,8 +34,7 @@ public class XtreamStreamController {
     private final AccessLogService   accessLogService;
     private final JwtService         jwtService;
 
-
-    @Value("${server.url:http://localhost}")
+    @Value("${xtream.server.url}")
     private String serverUrl;
 
     // canal ao vivo
@@ -68,7 +67,7 @@ public class XtreamStreamController {
 
         // String token = jwtService.gerarStreamToken(user.getId(), clientIp);
 
-        String url = String.format("%s/mediamtx/live/%s/index.m3u8?id=%s",
+        String url = String.format("%s/hls/%s/master.m3u8?id=%s",
             serverUrl,
             channel.getStreamKey(),
             streamId

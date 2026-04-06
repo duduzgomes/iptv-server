@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,23 +18,22 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class FFmpegManager {
     
-    @Value("${streaming.ffmpeg-path:ffmpeg}")
+    @Value("${streaming.ffmpeg-path}")
     private String ffmpegPath;
 
-    @Value("${streaming.hls-path:/hls}")
+    @Value("${streaming.hls-path}")
     private String hlsPath;
 
-    @Value("${streaming.mediamtx-url:rtmp://mediamtx:1935}")
+    @Value("${streaming.mediamtx-url}")
     private String mediamtxUrl;
 
-    @Value("${streaming.hls-segment-duration:2}")
+    @Value("${streaming.hls-segment-duration}")
     private int hlsSegmentDuration;
 
-    @Value("${streaming.hls-segment-count:8}")
+    @Value("${streaming.hls-segment-count}")
     private int hlsSegmentCount;
 
     private final ReconnectWatcher reconnectWatcher;
-
     private final Map<Long, Process> processosAtivos = new ConcurrentHashMap<>();
     private final Set<Long> canaisManualmenteParados = ConcurrentHashMap.newKeySet();
 
@@ -41,24 +41,24 @@ public class FFmpegManager {
         this.reconnectWatcher = reconnectWatcher;
     }
 
-    public void iniciarCanal(Long channelId, String streamKey) throws IOException {
+    public void iniciarCanal(Long channelId, String streamKey, String url) throws IOException {
         canaisManualmenteParados.remove(channelId);
 
         Path baseDir = Path.of(hlsPath, streamKey);
+        deleteRecursively(baseDir);
         Files.createDirectories(baseDir.resolve("720p"));
         Files.createDirectories(baseDir.resolve("480p"));
 
-        gerarMasterPlaylist(baseDir);
-
-        Process processo = new ProcessBuilder(montarComando(streamKey, baseDir))
+        Process processo = new ProcessBuilder(montarComando(url, baseDir))
                 .redirectErrorStream(true)
                 .redirectOutput(baseDir.resolve("ffmpeg.log").toFile())
                 .start();
 
         processosAtivos.put(channelId, processo);
-        log.info("[canal={}] FFmpeg iniciado (streamKey={})", channelId, streamKey);
 
-        Thread.ofVirtual().start(() -> monitorarProcesso(channelId, streamKey, processo));
+        log.info("[canal={}] FFmpeg iniciado (streamKey={}) url = {}", channelId, streamKey, url);
+
+        Thread.ofVirtual().start(() -> monitorarProcesso(channelId, streamKey, url, processo));
     }
 
     public void pararCanal(Long channelId) {
@@ -76,55 +76,57 @@ public class FFmpegManager {
         return processo != null && processo.isAlive();
     }
 
-    private void monitorarProcesso(Long channelId, String streamKey, Process processo) {
+    private void monitorarProcesso(Long channelId, String streamKey, String url, Process processo) {
+        Long inicioMs = System.currentTimeMillis();
+        Long duracaoMs = 0L;
         try {
             int exitCode = processo.waitFor();
             processosAtivos.remove(channelId);
-            log.warn("[canal={}] FFmpeg encerrou (exitCode={})", channelId, exitCode);
+            duracaoMs = System.currentTimeMillis() - inicioMs;
+
+            log.warn("[canal={}] FFmpeg encerrou (exitCode={}) após {}s", channelId, exitCode, duracaoMs / 1000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
-        reconnectWatcher.notificarQueda(channelId, streamKey, canaisManualmenteParados);
+        reconnectWatcher.notificarQueda(channelId, streamKey, url, canaisManualmenteParados, duracaoMs);
     }
 
-    private void gerarMasterPlaylist(Path baseDir) throws IOException {
-        String conteudo = """
-                #EXTM3U
-                #EXT-X-VERSION:3
-
-                #EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=1280x720
-                720p/index.m3u8
-
-                #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=854x480
-                480p/index.m3u8
-                """;
-        Files.writeString(baseDir.resolve("master.m3u8"), conteudo);
-    }
-
-    private List<String> montarComando(String streamKey, Path baseDir) {
-        String inputUrl = mediamtxUrl + "/live/" + streamKey;
-        String segDuration = String.valueOf(hlsSegmentDuration);
-        String segCount = String.valueOf(hlsSegmentCount);
-
+    private List<String> montarComando(String url, Path baseDir) {
         List<String> cmd = new ArrayList<>();
         cmd.add(ffmpegPath);
 
-        cmd.addAll(List.of("-re", "-i", inputUrl));
+        if (!url.startsWith("rtmp")) {
+            cmd.addAll(List.of("-i", url));
+        } else {
+            cmd.addAll(List.of("-re", "-i", url));
+        }
 
-        // copia vídeo do OBS sem reencoder — zero custo de CPU
         cmd.addAll(List.of(
-                "-map", "0:v", "-map", "0:a",
-                "-c:v", "copy",
-                "-c:a", "aac", "-b:a", "128k",
+                "-filter_complex", "[0:v]split=2[v720][v480];[v720]scale=1280:720[v720out];[v480]scale=854:480[v480out]",
+                "-map", "[v720out]", "-c:v:0", "h264_nvenc", "-preset:v:0", "p4", "-b:v:0", "1500k",
+                "-map", "[v480out]", "-c:v:1", "h264_nvenc", "-preset:v:1", "p4", "-b:v:1", "800k",
+                "-map", "0:a", "-c:a:0", "aac", "-b:a:0", "128k",
+                "-map", "0:a", "-c:a:1", "aac", "-b:a:1", "96k",
                 "-f", "hls",
-                "-hls_time", segDuration,
-                "-hls_list_size", segCount,
-                "-hls_flags", "delete_segments+append_list+discont_start",
-                "-hls_segment_filename", baseDir.resolve("720p/seg%03d.ts").toString(),
-                baseDir.resolve("720p/index.m3u8").toString()
+                "-hls_time", String.valueOf(hlsSegmentDuration),
+                "-hls_list_size", String.valueOf(hlsSegmentCount),
+                "-hls_flags", "delete_segments+independent_segments",
+                "-master_pl_name", "master.m3u8",
+                "-var_stream_map", "v:0,a:0,name:720p v:1,a:1,name:480p",
+                "-hls_segment_filename", baseDir.resolve("%v/seg%03d.ts").toString(),
+                baseDir.resolve("%v/index.m3u8").toString()
         ));
 
         return cmd;
+    }
+
+    private void deleteRecursively(Path path) throws IOException {
+        if (Files.exists(path)) {
+            try (var stream = Files.walk(path)) {
+                stream.sorted(Comparator.reverseOrder())
+                    .forEach(p -> p.toFile().delete());
+            }
+        }
     }
 }

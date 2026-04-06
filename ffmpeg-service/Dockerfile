@@ -6,9 +6,12 @@ RUN mvn dependency:go-offline -q
 COPY src ./src
 RUN mvn clean package -DskipTests -q
 
-FROM eclipse-temurin:21-jre-alpine
+FROM nvidia/cuda:12.3.1-base-ubuntu22.04
 
-RUN apk add --no-cache ffmpeg
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    openjdk-21-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
