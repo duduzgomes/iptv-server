@@ -1,9 +1,12 @@
 package com.duduzgomes.server_iptv.security;
 
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +29,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(
-        @Valid @RequestBody LoginRequestDTO request
+        @Valid @RequestBody LoginRequestDTO request,
+        HttpServletResponse response
     ) {
         var admin = adminRepository.findByUsername(request.username())
             .orElseThrow(() -> new UnauthorizedException("Credenciais inválidas"));
@@ -41,11 +45,32 @@ public class AuthController {
 
         String token = jwtService.gerar(admin);
 
+        ResponseCookie cookie = ResponseCookie.from("auth_token", token)
+            .httpOnly(true)
+            .path("/")
+            .maxAge(expiration)
+            .sameSite("Lax")
+            .secure(true)
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
         return ResponseEntity.ok(LoginResponseDTO.builder()
             .token(token)
             .username(admin.getUsername())
             .role(admin.getRole().name())
             .expiresIn(expiration)
             .build());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from("auth_token", "")
+            .httpOnly(true)
+            .path("/")
+            .maxAge(0)
+            .sameSite("Lax")
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.noContent().build();
     }
 }

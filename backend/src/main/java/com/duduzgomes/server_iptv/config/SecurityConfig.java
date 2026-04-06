@@ -91,12 +91,13 @@ public class SecurityConfig {
                 .requestMatchers("/live/**").permitAll()
                 .requestMatchers("/movie/**").permitAll()
                 .requestMatchers("/series/**").permitAll()
-                .requestMatchers("/auth/login").permitAll()
+                .requestMatchers("/auth/login", "/auth/logout").permitAll()
                 .requestMatchers("/internal/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(Customizer.withDefaults()))
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                .bearerTokenResolver(new com.duduzgomes.server_iptv.security.CookieBearerTokenResolver()))
             .build();
     }
     @Bean
