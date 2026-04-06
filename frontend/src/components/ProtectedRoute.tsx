@@ -1,7 +1,16 @@
-import { Outlet, Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-export default function ProtectedRoute() {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+interface ProtectedRouteProps {
+  requiredRole?: "ADMIN" | "SUPERADMIN";
+}
+
+export function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
+  const { isAuthenticated, role } = useAuth();
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  if (requiredRole && role !== requiredRole) return <Navigate to="/" replace />;
+
+  return <Outlet />;
 }
