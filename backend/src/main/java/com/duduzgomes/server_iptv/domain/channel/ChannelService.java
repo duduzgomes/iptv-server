@@ -60,7 +60,7 @@ public class ChannelService {
             .active(true)
             .build());
 
-        liveStreamManager.iniciarCanal(canal.getId(), canal.getStreamKey());
+        liveStreamManager.iniciarCanal(canal.getId(), canal.getStreamKey(), canal.getSourceUrl());
 
         return canal;
     }
@@ -81,13 +81,13 @@ public class ChannelService {
 
     @Transactional
     public void alterarStatus(Long id, boolean active) {
-        var channel = channelRepository.findById(id)
+        var canal = channelRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Canal não encontrado"));
-        channel.setActive(active);
-        channelRepository.save(channel);
+        canal.setActive(active);
+        channelRepository.save(canal);
 
         if (active){
-            liveStreamManager.iniciarCanal(channel.getId(), channel.getStreamKey());
+            liveStreamManager.iniciarCanal(canal.getId(), canal.getStreamKey(), canal.getSourceUrl());
             return;
         }
 

@@ -21,7 +21,7 @@ public class ChannelInitializer {
 
         canais.forEach(canal -> {
             try {
-                liveStreamManager.iniciarCanal(canal.getId(), canal.getStreamKey());
+                liveStreamManager.iniciarCanal(canal.getId(), canal.getStreamKey(), canal.getSourceUrl());
                 log.info("[canal={}] Iniciado (streamKey={})", canal.getId(), canal.getStreamKey());
             } catch (Exception e) {
                 log.error("[canal={}] Falha ao iniciar: {}", canal.getId(), e.getMessage());

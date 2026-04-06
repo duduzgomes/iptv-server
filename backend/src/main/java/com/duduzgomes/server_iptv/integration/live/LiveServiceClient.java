@@ -19,11 +19,11 @@ public class LiveServiceClient implements ILiveStreamManager {
     private String liveServiceUrl;
 
     @Override
-    public void iniciarCanal(Long channelId, String streamKey) {
+    public void iniciarCanal(Long channelId, String streamKey, String url) {
         try {
             restClient.post()
                     .uri(liveServiceUrl + "/live/iniciar")
-                    .body(new CanalRequestDTO(channelId, streamKey))
+                    .body(new CanalRequestDTO(channelId, streamKey, url))
                     .retrieve()
                     .toBodilessEntity();
             log.info("Canal iniciado — id: {}", channelId);
@@ -59,5 +59,5 @@ public class LiveServiceClient implements ILiveStreamManager {
         }
     }
 
-    record CanalRequestDTO(Long channelId, String streamKey) {}
+    record CanalRequestDTO(Long channelId, String streamKey, String url) {}
 }
