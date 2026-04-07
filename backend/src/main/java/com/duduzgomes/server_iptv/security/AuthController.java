@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.duduzgomes.server_iptv.domain.admin.AdminRepository;
@@ -62,6 +63,13 @@ public class AuthController {
             .build());
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<AdminInfoDTO> me(Authentication authentication) {
+        String username = authentication.getName();
+        String role = authentication.getAuthorities().iterator().next().getAuthority();
+        return ResponseEntity.ok(new AdminInfoDTO(username, role));
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("auth_token", "")
@@ -73,4 +81,6 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.noContent().build();
     }
+
+    public record AdminInfoDTO(String username, String role) {}
 }
