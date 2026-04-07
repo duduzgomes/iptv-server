@@ -22,3 +22,19 @@ export interface User {
   createdBy: string | null;
   createdAt: string;
 }
+export interface Movie {
+  id: number;
+  tmdbId: number;
+  title: string;
+  originalTitle: string;
+  year: number;
+  genre: string;
+  posterUrl: string | null;
+  rating: number;
+  duration: number;
+  active: boolean;
+  vodStatus: "PENDING" | "UPLOADING" | "PROCESSING" | "READY" | "ERROR";
+  hlsPath: string | null;
+  category: Category;
+  createdAt: string;
+}
