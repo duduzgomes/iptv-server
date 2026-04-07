@@ -1,9 +1,11 @@
 import { create } from "zustand";
 
+type Role = "SUPERADMIN" | "ADMIN";
+
 interface AuthState {
   username: string | null;
-  role: string | null;
-  setAuth: (username: string, role: string) => void;
+  role: Role | null;
+  setAuth: (username: string, role: Role) => void;
   clear: () => void;
 }
 
