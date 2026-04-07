@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.duduzgomes.server_iptv.domain.admin.AdminRepository;
@@ -66,7 +67,13 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<AdminInfoDTO> me(Authentication authentication) {
         String username = authentication.getName();
-        String role = authentication.getAuthorities().iterator().next().getAuthority();
+
+        String role = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .filter(auth -> auth.startsWith("ROLE_")) 
+            .findFirst()
+            .orElse("USER");
+            
         return ResponseEntity.ok(new AdminInfoDTO(username, role));
     }
 
