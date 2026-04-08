@@ -11,6 +11,11 @@ import { z } from "zod";
 import { userSchema, renovarSchema, type UserFormData } from "../schemas";
 import type { User } from "../types";
 import { PageSkeleton } from "../ui/PageSkeleton";
+import { Modal } from "../ui/Modal";
+import { Field, FormInput } from "../ui/FormField";
+import { Button } from "../ui/Button";
+import { StatusBadge } from "../ui/StatusBadge";
+import { DataTableHeader } from "../ui/DataTableHeader";
 
 type Modal =
   | { type: "create" }
@@ -26,13 +31,11 @@ export function UsersPage() {
     new Set(),
   );
 
-  // --- Query ---
   const { data, isLoading } = useQuery({
     queryKey: ["users", page],
     queryFn: () => usersApi.list(page),
   });
 
-  // --- Toggle senha visível ---
   function togglePassword(id: number) {
     setVisiblePasswords((prev) => {
       const next = new Set(prev);
@@ -41,7 +44,6 @@ export function UsersPage() {
     });
   }
 
-  // --- Forms ---
   const userForm = useForm<
     z.input<typeof userSchema>,
     unknown,
@@ -78,7 +80,6 @@ export function UsersPage() {
     setModal({ type: "renovar", user });
   }
 
-  // --- Mutations ---
   const invalidate = () => qc.invalidateQueries({ queryKey: ["users"] });
 
   const createMutation = useMutation({
@@ -143,20 +144,8 @@ export function UsersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-sm tracking-widest uppercase text-[#666]">
-          Usuários
-        </h1>
-        <button
-          onClick={openCreate}
-          className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors"
-        >
-          + Novo
-        </button>
-      </div>
+      <DataTableHeader title="Usuários" onAdd={openCreate} />
 
-      {/* Tabela */}
       <div className="border border-[#1f1f1f] rounded overflow-hidden">
         {isLoading ? (
           <PageSkeleton columns={columns} />
@@ -211,11 +200,10 @@ export function UsersPage() {
                     })}
                   </td>
                   <td className="py-3 px-4">
-                    <span
-                      className={`text-[10px] tracking-widest uppercase ${user.active ? "text-emerald-500" : "text-[#444]"}`}
-                    >
-                      {user.active ? "Ativo" : "Inativo"}
-                    </span>
+                    <StatusBadge
+                      status={user.active ? "ACTIVE" : "INACTIVE"}
+                      label={user.active ? "Ativo" : "Inativo"}
+                    />
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex gap-3">
@@ -257,104 +245,85 @@ export function UsersPage() {
         )}
       </div>
 
-      {/* Paginação */}
       {data && data.totalPages > 1 && (
         <div className="flex items-center justify-end gap-3">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] disabled:opacity-30 transition-colors"
           >
             Anterior
-          </button>
+          </Button>
           <span className="text-[10px] text-[#333]">
             {page + 1} / {data.totalPages}
           </span>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setPage((p) => Math.min(data.totalPages - 1, p + 1))}
             disabled={page === data.totalPages - 1}
-            className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] disabled:opacity-30 transition-colors"
           >
             Próxima
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Modal criar/editar */}
-      {modal && (modal.type === "create" || modal.type === "edit") && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#0d0d0d] border border-[#1f1f1f] rounded p-6 w-full max-w-sm space-y-4">
-            <h2 className="text-xs tracking-widest uppercase text-[#666]">
-              {modal.type === "create" ? "Novo usuário" : "Editar usuário"}
-            </h2>
-            <form
-              onSubmit={userForm.handleSubmit((d) =>
-                modal.type === "edit"
-                  ? editMutation.mutate({ id: modal.user.id, data: d })
-                  : createMutation.mutate(d),
-              )}
-              className="space-y-4"
+      <Modal
+        open={!!(modal && (modal.type === "create" || modal.type === "edit"))}
+        onClose={() => setModal(null)}
+        title={modal?.type === "create" ? "Novo usuário" : "Editar usuário"}
+      >
+        <form
+          onSubmit={userForm.handleSubmit((d) =>
+            modal?.type === "edit"
+              ? editMutation.mutate({
+                  id: (modal as { type: "edit"; user: User }).user.id,
+                  data: d,
+                })
+              : createMutation.mutate(d),
+          )}
+          className="space-y-4"
+        >
+          <Field
+            label="Conexões simultâneas"
+            error={userForm.formState.errors.maxConnections?.message}
+          >
+            <FormInput type="number" {...userForm.register("maxConnections")} />
+          </Field>
+          <Field
+            label="Validade (dias)"
+            error={userForm.formState.errors.validadeDias?.message}
+          >
+            <FormInput type="number" {...userForm.register("validadeDias")} />
+          </Field>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => setModal(null)}
             >
-              <div className="space-y-1">
-                <label className="text-[10px] tracking-widest uppercase text-[#444]">
-                  Conexões simultâneas
-                </label>
-                <input
-                  type="number"
-                  {...userForm.register("maxConnections")}
-                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333]"
-                />
-                {userForm.formState.errors.maxConnections && (
-                  <p className="text-[10px] text-red-500">
-                    {userForm.formState.errors.maxConnections.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] tracking-widest uppercase text-[#444]">
-                  Validade (dias)
-                </label>
-                <input
-                  type="number"
-                  {...userForm.register("validadeDias")}
-                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333]"
-                />
-                {userForm.formState.errors.validadeDias && (
-                  <p className="text-[10px] text-red-500">
-                    {userForm.formState.errors.validadeDias.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-3 justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={() => setModal(null)}
-                  className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={createMutation.isPending || editMutation.isPending}
-                  className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors disabled:opacity-40"
-                >
-                  {createMutation.isPending || editMutation.isPending
-                    ? "Salvando..."
-                    : "Salvar"}
-                </button>
-              </div>
-            </form>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={createMutation.isPending || editMutation.isPending}
+            >
+              {createMutation.isPending || editMutation.isPending
+                ? "Salvando..."
+                : "Salvar"}
+            </Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
 
       {/* Modal renovar */}
-      {modal?.type === "renovar" && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#0d0d0d] border border-[#1f1f1f] rounded p-6 w-full max-w-sm space-y-4">
-            <h2 className="text-xs tracking-widest uppercase text-[#666]">
-              Renovar validade
-            </h2>
+      <Modal
+        open={modal?.type === "renovar"}
+        onClose={() => setModal(null)}
+        title="Renovar validade"
+      >
+        {modal?.type === "renovar" && (
+          <>
             <p className="text-[10px] text-[#444]">{modal.user.username}</p>
             <form
               onSubmit={renovarForm.handleSubmit((d) =>
@@ -362,41 +331,28 @@ export function UsersPage() {
               )}
               className="space-y-4"
             >
-              <div className="space-y-1">
-                <label className="text-[10px] tracking-widest uppercase text-[#444]">
-                  Dias
-                </label>
-                <input
-                  type="number"
-                  {...renovarForm.register("dias")}
-                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333]"
-                />
-                {renovarForm.formState.errors.dias && (
-                  <p className="text-[10px] text-red-500">
-                    {renovarForm.formState.errors.dias.message}
-                  </p>
-                )}
-              </div>
+              <Field
+                label="Dias"
+                error={renovarForm.formState.errors.dias?.message}
+              >
+                <FormInput type="number" {...renovarForm.register("dias")} />
+              </Field>
               <div className="flex gap-3 justify-end pt-2">
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   onClick={() => setModal(null)}
-                  className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
                 >
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={renovarMutation.isPending}
-                  className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors disabled:opacity-40"
-                >
+                </Button>
+                <Button type="submit" disabled={renovarMutation.isPending}>
                   {renovarMutation.isPending ? "Renovando..." : "Renovar"}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

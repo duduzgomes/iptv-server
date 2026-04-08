@@ -3,24 +3,27 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Power } from "lucide-react";
+import { Pencil, Trash2, Power, FormInput } from "lucide-react";
 import { categoriesApi } from "../api/categories";
 import { categorySchema, type CategoryFormData } from "../schemas";
 import type { Category } from "../types";
 import { PageSkeleton } from "../ui/PageSkeleton";
+import { Button } from "../ui/Button";
+import { DataTableHeader } from "../ui/DataTableHeader";
+import { Field, FormSelect } from "../ui/FormField";
+import { Modal } from "../ui/Modal";
+import { StatusBadge } from "../ui/StatusBadge";
 
 export function CategoriesPage() {
   const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
 
-  // --- Query ---
   const { data: categories, isLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: () => categoriesApi.list(),
   });
 
-  // --- Form ---
   const {
     register,
     handleSubmit,
@@ -42,7 +45,6 @@ export function CategoriesPage() {
     setModalOpen(true);
   }
 
-  // --- Mutations ---
   const invalidate = () => qc.invalidateQueries({ queryKey: ["categories"] });
 
   const saveMutation = useMutation({
@@ -84,20 +86,8 @@ export function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-sm tracking-widest uppercase text-[#666]">
-          Categorias
-        </h1>
-        <button
-          onClick={openCreate}
-          className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors"
-        >
-          + Novo
-        </button>
-      </div>
+      <DataTableHeader title="Categorias" onAdd={openCreate} />
 
-      {/* Tabela */}
       <div className="border border-[#1f1f1f] rounded overflow-hidden">
         {isLoading ? (
           <PageSkeleton columns={["Nome", "Tipo", "Status", "Ações"]} />
@@ -126,11 +116,10 @@ export function CategoriesPage() {
                     {typeLabel[cat.contentType]}
                   </td>
                   <td className="py-3 px-4">
-                    <span
-                      className={`text-[10px] tracking-widest uppercase ${cat.active ? "text-emerald-500" : "text-[#444]"}`}
-                    >
-                      {cat.active ? "Ativo" : "Inativo"}
-                    </span>
+                    <StatusBadge
+                      status={cat.active ? "ACTIVE" : "INACTIVE"}
+                      label={cat.active ? "Ativo" : "Inativo"}
+                    />
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex gap-3">
@@ -161,74 +150,43 @@ export function CategoriesPage() {
         )}
       </div>
 
-      {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#0d0d0d] border border-[#1f1f1f] rounded p-6 w-full max-w-sm space-y-4">
-            <h2 className="text-xs tracking-widest uppercase text-[#666]">
-              {editing ? "Editar categoria" : "Nova categoria"}
-            </h2>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? "Editar categoria" : "Nova categoria"}
+      >
+        <form
+          onSubmit={handleSubmit((d) => saveMutation.mutate(d))}
+          className="space-y-4"
+        >
+          <Field label="Nome" error={errors.name?.message}>
+            <FormInput {...register("name")} />
+          </Field>
 
-            <form
-              onSubmit={handleSubmit((d) => saveMutation.mutate(d))}
-              className="space-y-4"
+          {!editing && (
+            <Field label="Tipo" error={errors.contentType?.message}>
+              <FormSelect {...register("contentType")}>
+                <option value="LIVE">Ao vivo</option>
+                <option value="VOD">Filme</option>
+                <option value="SERIES">Série</option>
+              </FormSelect>
+            </Field>
+          )}
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => setModalOpen(false)}
             >
-              <div className="space-y-1">
-                <label className="text-[10px] tracking-widest uppercase text-[#444]">
-                  Nome
-                </label>
-                <input
-                  {...register("name")}
-                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333]"
-                />
-                {errors.name && (
-                  <p className="text-[10px] text-red-500">
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              {!editing && (
-                <div className="space-y-1">
-                  <label className="text-[10px] tracking-widest uppercase text-[#444]">
-                    Tipo
-                  </label>
-                  <select
-                    {...register("contentType")}
-                    className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333]"
-                  >
-                    <option value="LIVE">Ao vivo</option>
-                    <option value="VOD">Filme</option>
-                    <option value="SERIES">Série</option>
-                  </select>
-                  {errors.contentType && (
-                    <p className="text-[10px] text-red-500">
-                      {errors.contentType.message}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="flex gap-3 justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saveMutation.isPending}
-                  className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors disabled:opacity-40"
-                >
-                  {saveMutation.isPending ? "Salvando..." : "Salvar"}
-                </button>
-              </div>
-            </form>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   );
 }

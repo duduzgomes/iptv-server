@@ -8,13 +8,18 @@ import { categoriesApi } from "../api/categories";
 import { PageSkeleton } from "../ui/PageSkeleton";
 import { uploadApi } from "../api/upload";
 import type { Movie } from "../types";
+import { Modal } from "../ui/Modal";
+import { FormInput, FormSelect, Field } from "../ui/FormField";
+import { Button } from "../ui/Button";
+import { StatusBadge } from "../ui/StatusBadge";
+import { DataTableHeader } from "../ui/DataTableHeader";
 
-const vodStatusLabel: Record<string, { label: string; color: string }> = {
-  PENDING: { label: "Pendente", color: "text-[#444]" },
-  UPLOADING: { label: "Enviando", color: "text-blue-400" },
-  PROCESSING: { label: "Processando", color: "text-yellow-500" },
-  READY: { label: "Pronto", color: "text-emerald-500" },
-  ERROR: { label: "Erro", color: "text-red-500" },
+const vodStatusLabel: Record<string, { label: string; status: string }> = {
+  PENDING: { label: "Pendente", status: "PENDING" },
+  UPLOADING: { label: "Enviando", status: "UPLOADING" },
+  PROCESSING: { label: "Processando", status: "PROCESSING" },
+  READY: { label: "Pronto", status: "READY" },
+  ERROR: { label: "Erro", status: "ERROR" },
 };
 
 type Step = "search" | "confirm";
@@ -23,7 +28,6 @@ export function MoviesPage() {
   const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Etapa do modal
   const [step, setStep] = useState<Step>("search");
   const [query, setQuery] = useState("");
   const [tmdbResults, setTmdbResults] = useState<TmdbMovie[]>([]);
@@ -42,19 +46,16 @@ export function MoviesPage() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- Query filmes ---
   const { data, isLoading } = useQuery({
     queryKey: ["movies"],
     queryFn: () => moviesApi.list(),
   });
 
-  // --- Query categorias VOD ---
   const { data: categories } = useQuery({
     queryKey: ["categories", "VOD"],
     queryFn: () => categoriesApi.list("VOD"),
   });
 
-  // --- Debounce busca TMDB ---
   useEffect(() => {
     if (!query.trim()) {
       setTmdbResults([]);
@@ -85,30 +86,26 @@ export function MoviesPage() {
 
   async function handleUpload() {
     if (!uploadFile || !uploadMovie) return;
-
     const totalChunks = uploadApi.calcularChunks(uploadFile);
     setUploadState("uploading");
     setUploadProgress({ current: 0, total: totalChunks });
-
     try {
       const { uploadId, urls } = await uploadApi.iniciar(
         uploadMovie.id,
         totalChunks,
       );
       const etags: string[] = [];
-
       for (let i = 0; i < totalChunks; i++) {
         const chunk = uploadApi.getChunk(uploadFile, i);
         const etag = await uploadApi.enviarChunk(urls[i], chunk);
         etags.push(etag);
         setUploadProgress({ current: i + 1, total: totalChunks });
       }
-
       await uploadApi.concluir(uploadMovie.id, uploadId, etags);
       setUploadState("done");
       qc.invalidateQueries({ queryKey: ["movies"] });
       toast.success("Upload concluído — processando transcodificação");
-    } catch (err) {
+    } catch {
       setUploadState("error");
       toast.error("Erro durante o upload");
     }
@@ -122,11 +119,10 @@ export function MoviesPage() {
   }
 
   function closeUpload() {
-    if (uploadState === "uploading") return; // bloqueia fechar durante upload
+    if (uploadState === "uploading") return;
     setUploadMovie(null);
   }
 
-  // --- Mutations ---
   const invalidate = () => qc.invalidateQueries({ queryKey: ["movies"] });
 
   const createMutation = useMutation({
@@ -174,20 +170,8 @@ export function MoviesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-sm tracking-widest uppercase text-[#666]">
-          Filmes
-        </h1>
-        <button
-          onClick={openModal}
-          className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors"
-        >
-          + Novo
-        </button>
-      </div>
+      <DataTableHeader title="Filmes" onAdd={openModal} />
 
-      {/* Tabela */}
       <div className="border border-[#1f1f1f] rounded overflow-hidden">
         {isLoading ? (
           <PageSkeleton columns={columns} />
@@ -236,18 +220,13 @@ export function MoviesPage() {
                       {movie.category.name}
                     </td>
                     <td className="py-3 px-4">
-                      <span
-                        className={`text-[10px] tracking-widest uppercase ${vod.color}`}
-                      >
-                        {vod.label}
-                      </span>
+                      <StatusBadge status={vod.status} label={vod.label} />
                     </td>
                     <td className="py-3 px-4">
-                      <span
-                        className={`text-[10px] tracking-widest uppercase ${movie.active ? "text-emerald-500" : "text-[#444]"}`}
-                      >
-                        {movie.active ? "Ativo" : "Inativo"}
-                      </span>
+                      <StatusBadge
+                        status={movie.active ? "ACTIVE" : "INACTIVE"}
+                        label={movie.active ? "Ativo" : "Inativo"}
+                      />
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-3">
@@ -289,258 +268,207 @@ export function MoviesPage() {
         )}
       </div>
 
-      {uploadMovie && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#0d0d0d] border border-[#1f1f1f] rounded p-6 w-full max-w-sm space-y-4">
+      {/* Modal upload */}
+      <Modal
+        open={!!uploadMovie}
+        onClose={closeUpload}
+        title="Upload"
+        size="sm"
+      >
+        <p className="text-[10px] text-[#444]">{uploadMovie?.title}</p>
+
+        {uploadState === "idle" && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full border border-dashed border-[#1f1f1f] rounded px-3 py-6 text-[10px] text-[#444] hover:border-[#333] hover:text-[#666] transition-colors text-center"
+            >
+              {uploadFile
+                ? uploadFile.name
+                : "Clique para selecionar o arquivo"}
+            </button>
+            {uploadFile && (
+              <p className="text-[10px] text-[#333] text-center">
+                {(uploadFile.size / 1024 / 1024).toFixed(1)} MB ·{" "}
+                {uploadApi.calcularChunks(uploadFile)} chunks
+              </p>
+            )}
+            <div className="flex gap-3 justify-end pt-2">
+              <Button variant="ghost" onClick={closeUpload}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpload} disabled={!uploadFile}>
+                Iniciar upload
+              </Button>
+            </div>
+          </>
+        )}
+
+        {uploadState === "uploading" && (
+          <div className="space-y-3">
+            <div className="w-full bg-[#141414] rounded-full h-1">
+              <div
+                className="bg-yellow-500 h-1 rounded-full transition-all duration-300"
+                style={{
+                  width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                }}
+              />
+            </div>
+            <p className="text-[10px] text-[#444] text-center">
+              Chunk {uploadProgress.current} de {uploadProgress.total}
+            </p>
+          </div>
+        )}
+
+        {uploadState === "done" && (
+          <div className="space-y-4">
+            <p className="text-[10px] text-emerald-500 text-center tracking-widest uppercase">
+              Upload concluído
+            </p>
+            <div className="flex justify-end">
+              <Button variant="ghost" onClick={closeUpload}>
+                Fechar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {uploadState === "error" && (
+          <div className="space-y-4">
+            <p className="text-[10px] text-red-500 text-center tracking-widest uppercase">
+              Erro no upload
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="ghost" onClick={closeUpload}>
+                Fechar
+              </Button>
+              <Button onClick={handleUpload}>Tentar novamente</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal busca TMDB */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} size="lg">
+        {step === "search" && (
+          <>
             <h2 className="text-xs tracking-widest uppercase text-[#666]">
-              Upload
+              Buscar filme
             </h2>
-            <p className="text-[10px] text-[#444]">{uploadMovie.title}</p>
+            <FormInput
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Digite o nome do filme..."
+            />
+            <div className="max-h-72 overflow-y-auto space-y-1">
+              {searching && (
+                <p className="text-[10px] text-[#444] text-center py-4">
+                  Buscando...
+                </p>
+              )}
+              {!searching &&
+                tmdbResults.map((movie) => (
+                  <button
+                    key={movie.id}
+                    onClick={() => selectMovie(movie)}
+                    className="flex items-center gap-3 w-full px-3 py-2 rounded hover:bg-[#141414] transition-colors text-left"
+                  >
+                    {movie.poster_path ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                        alt={movie.title}
+                        className="w-8 h-12 object-cover rounded opacity-80 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-8 h-12 bg-[#141414] rounded shrink-0" />
+                    )}
+                    <div>
+                      <p className="text-xs text-[#ccc]">{movie.title}</p>
+                      <p className="text-[10px] text-[#444]">
+                        {movie.release_date?.slice(0, 4)} · ID {movie.id}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              {!searching && query && tmdbResults.length === 0 && (
+                <p className="text-[10px] text-[#444] text-center py-4">
+                  Nenhum resultado
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button variant="ghost" onClick={() => setModalOpen(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </>
+        )}
 
-            {/* Idle — seleção de arquivo */}
-            {uploadState === "idle" && (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  className="hidden"
-                  onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+        {step === "confirm" && selected && (
+          <>
+            <h2 className="text-xs tracking-widest uppercase text-[#666]">
+              Confirmar cadastro
+            </h2>
+            <div className="flex items-center gap-4 p-3 bg-[#141414] rounded">
+              {selected.poster_path ? (
+                <img
+                  src={`https://image.tmdb.org/t/p/w92${selected.poster_path}`}
+                  alt={selected.title}
+                  className="w-10 h-14 object-cover rounded opacity-80 shrink-0"
                 />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full border border-dashed border-[#1f1f1f] rounded px-3 py-6 text-[10px] text-[#444] hover:border-[#333] hover:text-[#666] transition-colors text-center"
+              ) : (
+                <div className="w-10 h-14 bg-[#1a1a1a] rounded shrink-0" />
+              )}
+              <div>
+                <p className="text-xs text-[#ccc]">{selected.title}</p>
+                <p className="text-[10px] text-[#444]">
+                  {selected.release_date?.slice(0, 4)}
+                </p>
+                <p className="text-[10px] text-[#333] mt-1">
+                  TMDB ID: {selected.id}
+                </p>
+              </div>
+            </div>
+            <Field label="Categoria">
+              <FormSelect
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+              >
+                <option value="">Selecione...</option>
+                {categories?.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </FormSelect>
+            </Field>
+            <div className="flex gap-3 justify-between pt-2">
+              <Button variant="ghost" onClick={() => setStep("search")}>
+                ← Voltar
+              </Button>
+              <div className="flex gap-3">
+                <Button variant="ghost" onClick={() => setModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => createMutation.mutate()}
+                  disabled={!categoryId || createMutation.isPending}
                 >
-                  {uploadFile
-                    ? uploadFile.name
-                    : "Clique para selecionar o arquivo"}
-                </button>
-                {uploadFile && (
-                  <p className="text-[10px] text-[#333] text-center">
-                    {(uploadFile.size / 1024 / 1024).toFixed(1)} MB ·{" "}
-                    {uploadApi.calcularChunks(uploadFile)} chunks
-                  </p>
-                )}
-                <div className="flex gap-3 justify-end pt-2">
-                  <button
-                    onClick={closeUpload}
-                    className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleUpload}
-                    disabled={!uploadFile}
-                    className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors disabled:opacity-40"
-                  >
-                    Iniciar upload
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Uploading — progresso */}
-            {uploadState === "uploading" && (
-              <div className="space-y-3">
-                <div className="w-full bg-[#141414] rounded-full h-1">
-                  <div
-                    className="bg-yellow-500 h-1 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
-                    }}
-                  />
-                </div>
-                <p className="text-[10px] text-[#444] text-center">
-                  Chunk {uploadProgress.current} de {uploadProgress.total}
-                </p>
+                  {createMutation.isPending ? "Cadastrando..." : "Cadastrar"}
+                </Button>
               </div>
-            )}
-
-            {/* Done */}
-            {uploadState === "done" && (
-              <div className="space-y-4">
-                <p className="text-[10px] text-emerald-500 text-center tracking-widest uppercase">
-                  Upload concluído
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={closeUpload}
-                    className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                  >
-                    Fechar
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Error */}
-            {uploadState === "error" && (
-              <div className="space-y-4">
-                <p className="text-[10px] text-red-500 text-center tracking-widest uppercase">
-                  Erro no upload
-                </p>
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={closeUpload}
-                    className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                  >
-                    Fechar
-                  </button>
-                  <button
-                    onClick={handleUpload}
-                    className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors"
-                  >
-                    Tentar novamente
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#0d0d0d] border border-[#1f1f1f] rounded p-6 w-full max-w-lg space-y-4">
-            {/* Etapa 1 — busca TMDB */}
-            {step === "search" && (
-              <>
-                <h2 className="text-xs tracking-widest uppercase text-[#666]">
-                  Buscar filme
-                </h2>
-                <input
-                  autoFocus
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Digite o nome do filme..."
-                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333] placeholder:text-[#333]"
-                />
-
-                <div className="max-h-72 overflow-y-auto space-y-1">
-                  {searching && (
-                    <p className="text-[10px] text-[#444] text-center py-4">
-                      Buscando...
-                    </p>
-                  )}
-                  {!searching &&
-                    tmdbResults.map((movie) => (
-                      <button
-                        key={movie.id}
-                        onClick={() => selectMovie(movie)}
-                        className="flex items-center gap-3 w-full px-3 py-2 rounded hover:bg-[#141414] transition-colors text-left"
-                      >
-                        {movie.poster_path ? (
-                          <img
-                            src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                            alt={movie.title}
-                            className="w-8 h-12 object-cover rounded opacity-80 shrink-0"
-                          />
-                        ) : (
-                          <div className="w-8 h-12 bg-[#141414] rounded shrink-0" />
-                        )}
-                        <div>
-                          <p className="text-xs text-[#ccc]">{movie.title}</p>
-                          <p className="text-[10px] text-[#444]">
-                            {movie.release_date?.slice(0, 4)} · ID {movie.id}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
-                  {!searching && query && tmdbResults.length === 0 && (
-                    <p className="text-[10px] text-[#444] text-center py-4">
-                      Nenhum resultado
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={() => setModalOpen(false)}
-                    className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Etapa 2 — confirmar + categoria */}
-            {step === "confirm" && selected && (
-              <>
-                <h2 className="text-xs tracking-widest uppercase text-[#666]">
-                  Confirmar cadastro
-                </h2>
-
-                <div className="flex items-center gap-4 p-3 bg-[#141414] rounded">
-                  {selected.poster_path ? (
-                    <img
-                      src={`https://image.tmdb.org/t/p/w92${selected.poster_path}`}
-                      alt={selected.title}
-                      className="w-10 h-14 object-cover rounded opacity-80 shrink-0"
-                    />
-                  ) : (
-                    <div className="w-10 h-14 bg-[#1a1a1a] rounded shrink-0" />
-                  )}
-                  <div>
-                    <p className="text-xs text-[#ccc]">{selected.title}</p>
-                    <p className="text-[10px] text-[#444]">
-                      {selected.release_date?.slice(0, 4)}
-                    </p>
-                    <p className="text-[10px] text-[#333] mt-1">
-                      TMDB ID: {selected.id}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] tracking-widest uppercase text-[#444]">
-                    Categoria
-                  </label>
-                  <select
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333]"
-                  >
-                    <option value="">Selecione...</option>
-                    {categories?.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex gap-3 justify-between pt-2">
-                  <button
-                    onClick={() => setStep("search")}
-                    className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                  >
-                    ← Voltar
-                  </button>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setModalOpen(false)}
-                      className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={() => createMutation.mutate()}
-                      disabled={!categoryId || createMutation.isPending}
-                      className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors disabled:opacity-40"
-                    >
-                      {createMutation.isPending
-                        ? "Cadastrando..."
-                        : "Cadastrar"}
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+            </div>
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

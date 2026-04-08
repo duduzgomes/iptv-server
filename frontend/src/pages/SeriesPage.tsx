@@ -13,13 +13,18 @@ import { tmdbApi, type TmdbSeries } from "../api/tmdb";
 import { categoriesApi } from "../api/categories";
 import { PageSkeleton } from "../ui/PageSkeleton";
 import type { Series, SeriesInfoDTO } from "../types";
+import { Modal } from "../ui/Modal";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { FormInput, FormSelect, Field } from "../ui/FormField";
+import { Button } from "../ui/Button";
+import { StatusBadge } from "../ui/StatusBadge";
+import { DataTableHeader } from "../ui/DataTableHeader";
 
 type Step = "search" | "confirm";
 
 export function SeriesPage() {
   const qc = useQueryClient();
 
-  // modal cadastro
   const [modalOpen, setModalOpen] = useState(false);
   const [step, setStep] = useState<Step>("search");
   const [query, setQuery] = useState("");
@@ -29,13 +34,9 @@ export function SeriesPage() {
   const [categoryId, setCategoryId] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // expansão
   const [expanded, setExpanded] = useState<number | null>(null);
-
-  // confirmação delete
   const [confirmDelete, setConfirmDelete] = useState<Series | null>(null);
 
-  // queries
   const { data: seriesList = [], isLoading } = useQuery<Series[]>({
     queryKey: ["series"],
     queryFn: seriesApi.list,
@@ -52,7 +53,6 @@ export function SeriesPage() {
     queryFn: () => categoriesApi.list("SERIES"),
   });
 
-  // debounce tmdb
   useEffect(() => {
     if (!query.trim()) {
       setTmdbResults([]);
@@ -78,7 +78,6 @@ export function SeriesPage() {
     setModalOpen(true);
   }
 
-  // mutations
   const createMut = useMutation({
     mutationFn: () =>
       seriesApi.create({
@@ -126,20 +125,8 @@ export function SeriesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-sm tracking-widest uppercase text-[#666]">
-          Séries
-        </h1>
-        <button
-          onClick={openModal}
-          className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors"
-        >
-          + Nova
-        </button>
-      </div>
+      <DataTableHeader title="Séries" onAdd={openModal} addLabel="+ Nova" />
 
-      {/* Tabela */}
       <div className="border border-[#1f1f1f] rounded overflow-hidden">
         {isLoading ? (
           <PageSkeleton columns={columns} />
@@ -197,11 +184,10 @@ export function SeriesPage() {
                     </td>
                     <td className="py-3 px-4 text-[#555]">{s.category.name}</td>
                     <td className="py-3 px-4">
-                      <span
-                        className={`text-[10px] tracking-widest uppercase ${s.active ? "text-emerald-500" : "text-[#444]"}`}
-                      >
-                        {s.active ? "Ativa" : "Inativa"}
-                      </span>
+                      <StatusBadge
+                        status={s.active ? "ACTIVE" : "INACTIVE"}
+                        label={s.active ? "Ativa" : "Inativa"}
+                      />
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-3">
@@ -232,7 +218,6 @@ export function SeriesPage() {
                     </td>
                   </tr>
 
-                  {/* Expansão temporadas/episódios */}
                   {expanded === s.id && (
                     <tr
                       key={`${s.id}-detail`}
@@ -292,172 +277,133 @@ export function SeriesPage() {
         )}
       </div>
 
-      {/* Modal cadastro */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#0d0d0d] border border-[#1f1f1f] rounded p-6 w-full max-w-lg space-y-4">
-            {step === "search" && (
-              <>
-                <h2 className="text-xs tracking-widest uppercase text-[#666]">
-                  Buscar série
-                </h2>
-                <input
-                  autoFocus
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Digite o nome da série..."
-                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333] placeholder:text-[#333]"
-                />
-                <div className="max-h-72 overflow-y-auto space-y-1">
-                  {searching && (
-                    <p className="text-[10px] text-[#444] text-center py-4">
-                      Buscando...
-                    </p>
-                  )}
-                  {!searching &&
-                    tmdbResults.map((s) => (
-                      <button
-                        key={s.id}
-                        onClick={() => {
-                          setSelectedSeries(s);
-                          setStep("confirm");
-                        }}
-                        className="flex items-center gap-3 w-full px-3 py-2 rounded hover:bg-[#141414] transition-colors text-left"
-                      >
-                        {s.poster_path ? (
-                          <img
-                            src={`https://image.tmdb.org/t/p/w92${s.poster_path}`}
-                            alt={s.name}
-                            className="w-8 h-12 object-cover rounded opacity-80 shrink-0"
-                          />
-                        ) : (
-                          <div className="w-8 h-12 bg-[#141414] rounded shrink-0" />
-                        )}
-                        <div>
-                          <p className="text-xs text-[#ccc]">{s.name}</p>
-                          <p className="text-[10px] text-[#444]">
-                            {s.first_air_date?.slice(0, 4)} · ID {s.id}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
-                  {!searching && query && tmdbResults.length === 0 && (
-                    <p className="text-[10px] text-[#444] text-center py-4">
-                      Nenhum resultado
-                    </p>
-                  )}
-                </div>
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={() => setModalOpen(false)}
-                    className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            )}
-
-            {step === "confirm" && selectedSeries && (
-              <>
-                <h2 className="text-xs tracking-widest uppercase text-[#666]">
-                  Confirmar cadastro
-                </h2>
-                <div className="flex items-center gap-4 p-3 bg-[#141414] rounded">
-                  {selectedSeries.poster_path ? (
-                    <img
-                      src={`https://image.tmdb.org/t/p/w92${selectedSeries.poster_path}`}
-                      alt={selectedSeries.name}
-                      className="w-10 h-14 object-cover rounded opacity-80 shrink-0"
-                    />
-                  ) : (
-                    <div className="w-10 h-14 bg-[#1a1a1a] rounded shrink-0" />
-                  )}
-                  <div>
-                    <p className="text-xs text-[#ccc]">{selectedSeries.name}</p>
-                    <p className="text-[10px] text-[#444]">
-                      {selectedSeries.first_air_date?.slice(0, 4)}
-                    </p>
-                    <p className="text-[10px] text-[#333] mt-1">
-                      TMDB ID: {selectedSeries.id}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] tracking-widest uppercase text-[#444]">
-                    Categoria
-                  </label>
-                  <select
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full bg-[#141414] border border-[#1f1f1f] rounded px-3 py-2 text-xs text-[#ccc] outline-none focus:border-[#333]"
-                  >
-                    <option value="">Selecione...</option>
-                    {categories?.map((c: any) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex gap-3 justify-between pt-2">
-                  <button
-                    onClick={() => setStep("search")}
-                    className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                  >
-                    ← Voltar
-                  </button>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setModalOpen(false)}
-                      className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={() => createMut.mutate()}
-                      disabled={!categoryId || createMut.isPending}
-                      className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-[#333] transition-colors disabled:opacity-40"
-                    >
-                      {createMut.isPending ? "Cadastrando..." : "Cadastrar"}
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Confirm delete */}
-      {confirmDelete && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#0d0d0d] border border-[#1f1f1f] rounded p-6 w-full max-w-sm space-y-4">
+      {/* Modal busca TMDB */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} size="lg">
+        {step === "search" && (
+          <>
             <h2 className="text-xs tracking-widest uppercase text-[#666]">
-              Remover série?
+              Buscar série
             </h2>
-            <p className="text-[10px] text-[#444]">
-              <span className="text-[#ccc]">{confirmDelete.title}</span> e todos
-              os seus episódios serão removidos permanentemente.
-            </p>
-            <div className="flex gap-3 justify-end pt-2">
-              <button
-                onClick={() => setConfirmDelete(null)}
-                className="text-[10px] tracking-widest uppercase text-[#444] hover:text-[#ccc] transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => deleteMut.mutate(confirmDelete.id)}
-                disabled={deleteMut.isPending}
-                className="text-[10px] tracking-widest uppercase border border-[#1f1f1f] px-3 py-1.5 rounded hover:border-red-900 text-red-500 transition-colors disabled:opacity-40"
-              >
-                {deleteMut.isPending ? "Removendo..." : "Remover"}
-              </button>
+            <FormInput
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Digite o nome da série..."
+            />
+            <div className="max-h-72 overflow-y-auto space-y-1">
+              {searching && (
+                <p className="text-[10px] text-[#444] text-center py-4">
+                  Buscando...
+                </p>
+              )}
+              {!searching &&
+                tmdbResults.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      setSelectedSeries(s);
+                      setStep("confirm");
+                    }}
+                    className="flex items-center gap-3 w-full px-3 py-2 rounded hover:bg-[#141414] transition-colors text-left"
+                  >
+                    {s.poster_path ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w92${s.poster_path}`}
+                        alt={s.name}
+                        className="w-8 h-12 object-cover rounded opacity-80 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-8 h-12 bg-[#141414] rounded shrink-0" />
+                    )}
+                    <div>
+                      <p className="text-xs text-[#ccc]">{s.name}</p>
+                      <p className="text-[10px] text-[#444]">
+                        {s.first_air_date?.slice(0, 4)} · ID {s.id}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              {!searching && query && tmdbResults.length === 0 && (
+                <p className="text-[10px] text-[#444] text-center py-4">
+                  Nenhum resultado
+                </p>
+              )}
             </div>
-          </div>
-        </div>
-      )}
+            <div className="flex justify-end pt-2">
+              <Button variant="ghost" onClick={() => setModalOpen(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </>
+        )}
+
+        {step === "confirm" && selectedSeries && (
+          <>
+            <h2 className="text-xs tracking-widest uppercase text-[#666]">
+              Confirmar cadastro
+            </h2>
+            <div className="flex items-center gap-4 p-3 bg-[#141414] rounded">
+              {selectedSeries.poster_path ? (
+                <img
+                  src={`https://image.tmdb.org/t/p/w92${selectedSeries.poster_path}`}
+                  alt={selectedSeries.name}
+                  className="w-10 h-14 object-cover rounded opacity-80 shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-14 bg-[#1a1a1a] rounded shrink-0" />
+              )}
+              <div>
+                <p className="text-xs text-[#ccc]">{selectedSeries.name}</p>
+                <p className="text-[10px] text-[#444]">
+                  {selectedSeries.first_air_date?.slice(0, 4)}
+                </p>
+                <p className="text-[10px] text-[#333] mt-1">
+                  TMDB ID: {selectedSeries.id}
+                </p>
+              </div>
+            </div>
+            <Field label="Categoria">
+              <FormSelect
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+              >
+                <option value="">Selecione...</option>
+                {categories?.map((c: any) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </FormSelect>
+            </Field>
+            <div className="flex gap-3 justify-between pt-2">
+              <Button variant="ghost" onClick={() => setStep("search")}>
+                ← Voltar
+              </Button>
+              <div className="flex gap-3">
+                <Button variant="ghost" onClick={() => setModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => createMut.mutate()}
+                  disabled={!categoryId || createMut.isPending}
+                >
+                  {createMut.isPending ? "Cadastrando..." : "Cadastrar"}
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Remover série?"
+        message={`${confirmDelete?.title ?? ""} e todos os seus episódios serão removidos permanentemente.`}
+        confirmLabel={deleteMut.isPending ? "Removendo..." : "Remover"}
+        onConfirm={() => confirmDelete && deleteMut.mutate(confirmDelete.id)}
+        onCancel={() => setConfirmDelete(null)}
+        loading={deleteMut.isPending}
+      />
     </div>
   );
 }
