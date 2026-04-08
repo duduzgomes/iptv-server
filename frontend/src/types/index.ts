@@ -51,3 +51,38 @@ export interface Channel {
   category: { id: number; name: string };
   createdAt: string;
 }
+
+export interface Series {
+  id: number;
+  title: string;
+  posterUrl?: string;
+  genre?: string;
+  rating?: number;
+  active: boolean;
+  category: { id: number; name: string };
+  updatedAt: string;
+}
+
+export interface EpisodeDTO {
+  id: string;
+  episode_num: number;
+  title: string;
+  season: number;
+  info?: {
+    plot?: string;
+    duration?: string;
+    movie_image?: string;
+    release_date?: string;
+  };
+}
+
+export interface SeriesInfoDTO {
+  info: {
+    series_id: number;
+    name: string;
+    cover?: string;
+    genre?: string;
+    rating?: string;
+  };
+  episodes: Record<string, EpisodeDTO[]>;
+}

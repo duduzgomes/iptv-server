@@ -31,8 +31,14 @@ export const channelSchema = z.object({
   epgChannelId: z.string().optional(),
 });
 
+export const seriesSchema = z.object({
+  categoryId: z.number({ error: "Categoria obrigatória" }),
+  tmdbId: z.number({ error: "TMDB ID obrigatório" }),
+});
+
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type CategoryFormData = z.infer<typeof categorySchema>;
 export type UserFormData = z.output<typeof userSchema>;
 export type RenovarFormData = z.output<typeof renovarSchema>;
 export type ChannelFormData = z.infer<typeof channelSchema>;
+export type seriesSchema = z.infer<typeof seriesSchema>;

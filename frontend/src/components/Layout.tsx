@@ -27,7 +27,7 @@ const navItems = [
 ];
 
 export function Layout() {
-  const { username, role } = useAuth();
+  const { username, role, isLoading } = useAuth();
   const clear = useAuthStore((s) => s.clear);
   const { sidebarOpen, toggleSidebar } = useUIStore();
   const navigate = useNavigate();
@@ -70,12 +70,14 @@ export function Layout() {
 
         {/* Nav */}
         <nav className="flex-1 py-4 space-y-0.5 px-2">
-          {allItems.map(({ to, label, icon: Icon, exact }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={exact}
-              className={({ isActive }) => `
+          {isLoading
+            ? null
+            : allItems.map(({ to, label, icon: Icon, exact }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={exact}
+                  className={({ isActive }) => `
                 flex items-center gap-3 px-2 py-2 rounded text-xs transition-colors
                 ${
                   isActive
@@ -83,11 +85,13 @@ export function Layout() {
                     : "text-[#666] hover:text-[#ccc] hover:bg-[#161616]"
                 }
               `}
-            >
-              <Icon size={16} className="shrink-0" />
-              {sidebarOpen && <span className="tracking-wider">{label}</span>}
-            </NavLink>
-          ))}
+                >
+                  <Icon size={16} className="shrink-0" />
+                  {sidebarOpen && (
+                    <span className="tracking-wider">{label}</span>
+                  )}
+                </NavLink>
+              ))}
         </nav>
 
         {/* Logout */}

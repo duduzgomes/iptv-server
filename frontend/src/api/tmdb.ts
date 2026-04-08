@@ -9,11 +9,28 @@ export interface TmdbMovie {
   release_date: string;
 }
 
+export interface TmdbSeries {
+  id: number;
+  name: string;
+  original_name: string;
+  poster_path: string | null;
+  first_air_date: string;
+}
+
 export const tmdbApi = {
   search: async (query: string): Promise<TmdbMovie[]> => {
     if (!query.trim()) return [];
     const res = await fetch(
       `${TMDB_BASE}/search/movie?query=${encodeURIComponent(query)}&language=pt-BR&api_key=${TMDB_KEY}`,
+    );
+    const data = await res.json();
+    return data.results ?? [];
+  },
+
+  searchSeries: async (query: string): Promise<TmdbSeries[]> => {
+    if (!query.trim()) return [];
+    const res = await fetch(
+      `${TMDB_BASE}/search/tv?query=${encodeURIComponent(query)}&language=pt-BR&api_key=${TMDB_KEY}`,
     );
     const data = await res.json();
     return data.results ?? [];
