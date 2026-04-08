@@ -1,6 +1,8 @@
 package com.duduzgomes.server_iptv.domain.channel;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -11,5 +13,7 @@ public interface ChannelRepository extends JpaRepository<Channel, Long> {
     Optional<Channel> findByStreamKey(String streamKey);
     Optional<Channel> findByStreamKeyAndActiveTrue(String streamKey);
     boolean existsByStreamKeyAndActiveTrue(String streamKey);
+    @Query("SELECT COALESCE(MAX(c.num), 0) FROM Channel c")
+    int findMaxNum();
 
 }

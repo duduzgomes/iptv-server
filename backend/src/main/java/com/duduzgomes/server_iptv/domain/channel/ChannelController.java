@@ -32,8 +32,8 @@ public class ChannelController {
                 request.logoUrl(),
                 request.sourceUrl(),
                 request.streamKey(),
-                request.epgChannelId(),
-                request.num()
+                request.epgChannelId()
+              
             ));
     }
 
@@ -43,8 +43,11 @@ public class ChannelController {
         @Valid @RequestBody EditarChannelRequest request
     ) {
         return ResponseEntity.ok(channelService.editar(
-            id, request.name(), request.logoUrl(),
-            request.sourceUrl(), request.epgChannelId(), request.num()
+            id, 
+            request.name(), 
+            request.logoUrl(),
+            request.sourceUrl(), 
+            request.epgChannelId()
         ));
     }
 
@@ -69,15 +72,14 @@ public class ChannelController {
                   String logoUrl,
         @NotBlank String sourceUrl,
         @NotBlank String streamKey,
-                  String epgChannelId,
-        @NotNull  Integer num
+                  String epgChannelId
+   
     ) {}
 
     record EditarChannelRequest(
         @NotBlank String  name,
                   String  logoUrl,
         @NotBlank String  sourceUrl,
-                  String  epgChannelId,
-        @NotNull  Integer num
+                  String  epgChannelId
     ) {}
 }

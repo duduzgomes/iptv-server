@@ -41,7 +41,7 @@ public class Channel {
     @Column(nullable = false)
     private Integer num;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     @Builder.Default
     private Boolean active = true;
 

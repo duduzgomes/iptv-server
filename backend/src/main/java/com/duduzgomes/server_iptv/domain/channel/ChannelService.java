@@ -44,10 +44,12 @@ public class ChannelService {
     @Transactional
     public Channel criar(Long categoryId, String name, String logoUrl,
                         String sourceUrl, String streamKey,
-                        String epgChannelId, Integer num) {
+                        String epgChannelId) {
 
         var category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new NotFoundException("Categoria não encontrada"));
+        
+        int num = channelRepository.findMaxNum() + 1;
 
         Channel canal =  channelRepository.save(Channel.builder()
             .name(name)
@@ -67,7 +69,7 @@ public class ChannelService {
 
     @Transactional
     public Channel editar(Long id, String name, String logoUrl,
-                        String sourceUrl, String epgChannelId, Integer num) {
+                        String sourceUrl, String epgChannelId) {
         var channel = channelRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Canal não encontrado"));
 
@@ -75,7 +77,7 @@ public class ChannelService {
         channel.setLogoUrl(logoUrl);
         channel.setSourceUrl(sourceUrl);
         channel.setEpgChannelId(epgChannelId);
-        channel.setNum(num);
+        channel.setNum(channel.getNum());
         return channelRepository.save(channel);
     }
 
