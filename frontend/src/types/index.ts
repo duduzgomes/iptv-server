@@ -38,3 +38,16 @@ export interface Movie {
   category: Category;
   createdAt: string;
 }
+
+export interface Channel {
+  id: number;
+  name: string;
+  logoUrl?: string;
+  sourceUrl: string;
+  streamKey: string;
+  epgChannelId?: string;
+  num: number;
+  active: boolean;
+  category: { id: number; name: string };
+  createdAt: string;
+}

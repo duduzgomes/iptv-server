@@ -22,7 +22,17 @@ export const renovarSchema = z.object({
   dias: coerceNumber(1, "Mínimo 1 dia"),
 });
 
+export const channelSchema = z.object({
+  categoryId: z.number({ error: "Categoria obrigatória" }),
+  name: z.string().min(1, "Nome obrigatório"),
+  logoUrl: z.string().optional(),
+  sourceUrl: z.string().min(1, "URL de origem obrigatória"),
+  streamKey: z.string().min(1, "Stream key obrigatória"),
+  epgChannelId: z.string().optional(),
+});
+
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type CategoryFormData = z.infer<typeof categorySchema>;
 export type UserFormData = z.output<typeof userSchema>;
 export type RenovarFormData = z.output<typeof renovarSchema>;
+export type ChannelFormData = z.infer<typeof channelSchema>;
