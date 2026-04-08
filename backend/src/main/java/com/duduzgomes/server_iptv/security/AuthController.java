@@ -74,7 +74,7 @@ public class AuthController {
             .findFirst()
             .orElse("USER");
             
-        return ResponseEntity.ok(new AdminInfoDTO(username, role));
+        return ResponseEntity.ok(new AdminInfoDTO(username, role.replace("ROLE_", "")));
     }
 
     @PostMapping("/logout")
