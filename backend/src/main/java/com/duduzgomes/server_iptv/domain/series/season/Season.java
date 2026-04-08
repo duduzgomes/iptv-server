@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.duduzgomes.server_iptv.domain.series.Series;
 import com.duduzgomes.server_iptv.domain.series.episode.Episode;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "seasons")
@@ -21,6 +22,7 @@ public class Season {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "series_id", nullable = false)
     private Series series;
@@ -41,6 +43,7 @@ public class Season {
 
     private Integer year;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "season", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("number ASC")
     private List<Episode> episodes;

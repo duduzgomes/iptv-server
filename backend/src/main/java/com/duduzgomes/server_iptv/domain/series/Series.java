@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.duduzgomes.server_iptv.domain.category.Category;
 import com.duduzgomes.server_iptv.domain.series.season.Season;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "series")
@@ -61,6 +62,7 @@ public class Series {
     @Builder.Default
     private Boolean active = true;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "series", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("number ASC")
     private List<Season> seasons;

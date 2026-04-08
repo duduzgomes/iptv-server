@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 import com.duduzgomes.server_iptv.domain.series.season.Season;
 import com.duduzgomes.server_iptv.domain.vod.VodStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "episodes")
@@ -21,6 +22,7 @@ public class Episode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "season_id", nullable = false)
     private Season season;

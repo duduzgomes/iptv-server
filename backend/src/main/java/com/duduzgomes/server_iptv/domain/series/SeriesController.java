@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.duduzgomes.server_iptv.integration.tmdb.dto.SeriesInfoDTO;
+
 import java.util.List;
 
 @RestController
@@ -27,6 +30,11 @@ public class SeriesController {
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(seriesService.cadastrar(request.categoryId(), request.tmdbId()));
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<SeriesInfoDTO> buscar(@PathVariable Long id) {
+        return ResponseEntity.ok(seriesService.buscarInfo(id));
     }
 
     @PatchMapping("/{id}/status")
