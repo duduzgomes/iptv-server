@@ -45,3 +45,48 @@
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: "Plus Jakarta Sans Mono", "Courier New", monospace;
 }
+
+@layer base {
+  /* — Scrollbar — */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2a2a2a #111111;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #111111;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2a2a2a;
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555555;
+  }
+
+  /* — Input scrollbar — */
+  input::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* — Select dropdown — */
+  select option {
+    background: #1a1a1a;
+    color: #e0e0e0;
+    padding: 8px 12px;
+  }
+
+  select option:hover,
+  select option:focus,
+  select option:checked {
+    background: linear-gradient(#2a2a2a, #2a2a2a);
+    color: #e0e0e0;
+  }
+}
