@@ -34,7 +34,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-deepest">
-      <div className="w-full max-w-xs px-4">
+      <div className="w-1/4 px-4">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="bg-surface border border-border-subtle rounded p-8 flex flex-col gap-6"
@@ -55,7 +55,7 @@ export default function LoginPage() {
 
           <div className="h-px bg-border-subtle" />
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             <Field label="identificador" error={errors.username?.message}>
               <FormInput
                 {...register("username")}
@@ -79,7 +79,7 @@ export default function LoginPage() {
             variant="primary"
             size="lg"
             disabled={isSubmitting}
-            className="w-full"
+            className="font-semibold text-sm"
           >
             {isSubmitting ? "aguardando..." : "autenticar"}
           </Button>
