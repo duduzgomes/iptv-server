@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 const inputClass =
   "w-full bg-surface-input rounded px-3 py-2 text-sm text-text outline-none placeholder:text-text-ghost";
 
-const labelClass = "text-sm tracking-widest uppercase text-text-subtle";
+const labelClass = "text-sm tracking-widest text-text-subtle";
 
 export function FormLabel({ className, ...props }: ComponentProps<"label">) {
   return (

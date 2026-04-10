@@ -41,7 +41,7 @@ export function DataTable({ columns, isLoading, children }: DataTableProps) {
   if (isLoading) return <PageSkeleton columns={columns} />;
 
   return (
-    <div className="bg-surface border border-border-subtle rounded-xl overflow-hidden">
+    <div className="bg-surface border border-border-subtle rounded-md overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border-subtle text-text-muted">

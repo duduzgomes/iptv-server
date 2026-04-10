@@ -20,7 +20,7 @@ export function DataTableHeader({
       <h1 className="text-sm tracking-widest uppercase text-text-muted">
         {title}
       </h1>
-      <Button onClick={onAdd} size="lg">
+      <Button onClick={onAdd} size="lg" variant="primary">
         {addLabel}
       </Button>
     </div>

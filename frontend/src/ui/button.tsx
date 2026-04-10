@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 export const buttonVariants = tv({
   base: [
     "inline-flex cursor-pointer items-center justify-center",
-    "text-[10px] tracking-widest uppercase rounded transition-colors",
+    "text-xs font-semibold tracking-widest rounded transition-colors",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus",
     "disabled:pointer-events-none disabled:opacity-40",
   ],
@@ -26,8 +26,7 @@ export const buttonVariants = tv({
 });
 
 export interface ButtonProps
-  extends ComponentProps<"button">,
-    VariantProps<typeof buttonVariants> {}
+  extends ComponentProps<"button">, VariantProps<typeof buttonVariants> {}
 
 export function Button({
   className,

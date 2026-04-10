@@ -78,7 +78,7 @@ export function Layout() {
                   to={to}
                   end={exact}
                   className={({ isActive }) => `
-                flex items-center gap-3 px-2 py-2 rounded text-xs transition-colors
+                flex items-center gap-3 px-2 py-2 rounded text-sm transition-colors
                 ${
                   isActive
                     ? "bg-surface text-text-strong"
@@ -86,7 +86,7 @@ export function Layout() {
                 }
               `}
                 >
-                  <Icon size={16} className="shrink-0" />
+                  <Icon size={24} className="shrink-0" />
                   {sidebarOpen && (
                     <span className="tracking-wider">{label}</span>
                   )}
@@ -109,10 +109,12 @@ export function Layout() {
       {/* Main */}
       <div className="flex flex-col flex-1 min-w-0">
         {/* Header */}
-        <header className="flex items-center justify-end h-14 px-6 border-b border-border-subtle shrink-0">
-          <span className="text-xs text-text-subtle tracking-widest uppercase">
-            {username}
-          </span>
+        <header className="grid grid-cols-12 h-14 border-b border-border-subtle shrink-0">
+          <div className="col-start-3 col-span-8 flex items-center justify-end">
+            <span className="text-xs text-text-subtle tracking-widest uppercase">
+              {username}
+            </span>
+          </div>
         </header>
 
         {/* Conteúdo com animação de rota */}
@@ -124,9 +126,11 @@ export function Layout() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15 }}
-              className="h-full p-6"
+              className="h-full grid grid-cols-12 py-6"
             >
-              <Outlet />
+              <div className="col-start-3 col-span-8">
+                <Outlet />
+              </div>
             </motion.div>
           </AnimatePresence>
         </main>

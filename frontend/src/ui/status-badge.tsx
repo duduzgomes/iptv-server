@@ -39,7 +39,7 @@ export function StatusBadge({ status, label, colorMap }: StatusBadgeProps) {
     <span
       data-slot="status-badge"
       data-status={status}
-      className={twMerge("text-[10px] tracking-widest uppercase", color)}
+      className={twMerge("text-xs tracking-widest uppercase", color)}
     >
       {label ?? status}
     </span>

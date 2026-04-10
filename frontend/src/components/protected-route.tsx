@@ -6,8 +6,8 @@ export function ProtectedRoute({ requiredRole }: { requiredRole?: string }) {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4 rounded-2xl bg-zinc-900 px-10 py-8 shadow-2xl ring-1 ring-white/10">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-4 rounded-2xl bg-surface-raised px-10 py-8 shadow-2xl ring-1 ring-white/10">
           <div className="relative h-10 w-10">
             <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-white opacity-80" />
             <div className="absolute inset-1 animate-spin rounded-full border-2 border-transparent border-t-white/30 [animation-duration:1.5s] [animation-direction:reverse]" />
