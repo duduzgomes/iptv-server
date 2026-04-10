@@ -1,1 +1,47 @@
 @import "tailwindcss";
+
+@theme {
+  /* — Brand palette (raw) — mantidos como tokens de marca — */
+  --color-brand-deepest: #0d0d0d; /* fundo da página */
+  --color-brand-dark: #1a1a1a; /* sidebar, topbar */
+  --color-brand-mid: #2a2a2a; /* bordas, divisores */
+  --color-brand-green: #22c55e; /* hover dos acentos */
+  --color-brand-accent: ##a8e68a; /* cor principal de ação */
+
+  /* Backgrounds  */
+  --color-bg: #111111; /* fundo da página */
+  --color-surface: #1a1a1a; /* sidebar, topbar, cards */
+  --color-surface-raised: #212121; /* modais / sheets */
+  --color-surface-input: #161616; /* inputs, search */
+
+  /* — Borders — */
+  --color-border: #2a2a2a;
+  --color-border-subtle: #1e1e1e;
+  --color-border-focus: #a8e68a;
+
+  /* — Text — */
+  --color-text: #e0e0e0;
+  --color-text-muted: #888888;
+  --color-text-subtle: #555555;
+  --color-text-ghost: #333333;
+  --color-text-strong: #ffffff;
+
+  /* — Primary action — */
+  --color-primary: #a8e68a;
+  --color-primary-hover: #22c55e;
+  --color-primary-fg: #000000;
+
+  /* — Status — */
+  --color-success: #22c55e;
+  --color-success-bg: #052e16;
+  --color-error: #ef4444;
+  --color-error-hover: #991b1b;
+  --color-error-bg: #2d0a0a;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #2d1a00;
+  --color-info: #3b82f6;
+
+  /* — Typography — */
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "Plus Jakarta Sans Mono", "Courier New", monospace;
+}

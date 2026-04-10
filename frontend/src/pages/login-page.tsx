@@ -6,6 +6,8 @@ import client from "../api/client";
 import { useAuthStore } from "../stores/authStore";
 import { loginSchema } from "../schemas";
 import type { LoginFormData } from "../schemas";
+import { Field, FormInput } from "../ui/form-field";
+import { Button } from "../ui/button";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -31,50 +33,65 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-gray-900 p-8 rounded-xl w-full max-w-sm flex flex-col gap-4"
-      >
-        <h1 className="text-white text-2xl font-bold text-center">
-          IPTV Admin
-        </h1>
-
-        <div className="flex flex-col gap-1">
-          <input
-            {...register("username")}
-            placeholder="Usuário"
-            className="bg-gray-800 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.username && (
-            <span className="text-red-400 text-sm">
-              {errors.username.message}
-            </span>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <input
-            {...register("password")}
-            type="password"
-            placeholder="Senha"
-            className="bg-gray-800 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.password && (
-            <span className="text-red-400 text-sm">
-              {errors.password.message}
-            </span>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2 rounded-lg transition-colors"
+    <div className="min-h-screen flex items-center justify-center bg-brand-deepest">
+      <div className="w-full max-w-xs px-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-surface border border-border-subtle rounded p-8 flex flex-col gap-6"
         >
-          {isSubmitting ? "Entrando..." : "Entrar"}
-        </button>
-      </form>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs tracking-widest uppercase text-text-subtle">
+              painel de controle
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-primary tracking-tight">
+                IPTV
+              </span>
+              <span className="text-xs tracking-widest uppercase text-text-muted">
+                admin
+              </span>
+            </div>
+          </div>
+
+          <div className="h-px bg-border-subtle" />
+
+          <div className="flex flex-col gap-4">
+            <Field label="identificador" error={errors.username?.message}>
+              <FormInput
+                {...register("username")}
+                placeholder="—"
+                autoComplete="username"
+              />
+            </Field>
+
+            <Field label="senha" error={errors.password?.message}>
+              <FormInput
+                {...register("password")}
+                type="password"
+                placeholder="—"
+                autoComplete="current-password"
+              />
+            </Field>
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={isSubmitting}
+            className="w-full"
+          >
+            {isSubmitting ? "aguardando..." : "autenticar"}
+          </Button>
+
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
+            <span className="text-xs text-text-subtle tracking-widest uppercase">
+              sistema online
+            </span>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
