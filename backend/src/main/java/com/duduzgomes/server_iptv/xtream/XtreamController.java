@@ -24,7 +24,6 @@ public class XtreamController {
         @RequestParam String username,
         @RequestParam String password,
         @RequestParam(required = false) String action,
-        @RequestParam(required = false) Long seriesId,
         HttpServletRequest request
     ) {
         if (action == null) {
@@ -40,7 +39,10 @@ public class XtreamController {
             case "get_vod_streams"       -> ResponseEntity.ok(movieService.listarFilmes());
             case "get_series_categories" -> ResponseEntity.ok(seriesService.listarCategorias());
             case "get_series"            -> ResponseEntity.ok(seriesService.listarSeries());
-            case "get_series_info" -> ResponseEntity.ok(seriesService.buscarInfo(seriesId));
+            case "get_series_info" -> {
+                Long seriesId = Long.parseLong(request.getParameter("series_id"));
+                yield ResponseEntity.ok(seriesService.buscarInfo(seriesId));
+            }
             case "get_vod_info" -> {
                 Long vodId = Long.parseLong(request.getParameter("vod_id"));
                 yield ResponseEntity.ok(movieService.buscarInfo(vodId));

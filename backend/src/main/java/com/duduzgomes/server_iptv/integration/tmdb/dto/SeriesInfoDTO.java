@@ -9,5 +9,5 @@ public record SeriesInfoDTO(
 
     SeriesDTO info,
     // chave = número da temporada como String ("1", "2"...)
-    Map<String, List<EpisodeDTO>> episodes
+    Map<String, List<EpisodeDTO>> temporadas
 ) {}

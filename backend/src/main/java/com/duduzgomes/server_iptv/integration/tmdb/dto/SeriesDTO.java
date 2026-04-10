@@ -28,6 +28,9 @@ public record SeriesDTO(
     @JsonProperty("last_modified")
     String lastModified,
 
+    @JsonProperty("tmdb_id")
+    Integer tmbdId,
+
     String rating,
 
     @JsonProperty("rating_5based")

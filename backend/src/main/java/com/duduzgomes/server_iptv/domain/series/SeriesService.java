@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.duduzgomes.server_iptv.domain.category.CategoryRepository;
 import com.duduzgomes.server_iptv.domain.category.ContentType;
+import com.duduzgomes.server_iptv.domain.series.SeriesController.CadastrarEpisodioRequest;
 import com.duduzgomes.server_iptv.domain.series.episode.Episode;
 import com.duduzgomes.server_iptv.domain.series.episode.EpisodeRepository;
 import com.duduzgomes.server_iptv.domain.series.season.Season;
@@ -15,6 +16,7 @@ import com.duduzgomes.server_iptv.integration.tmdb.dto.EpisodeDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.EpisodeInfoDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.SeriesDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.SeriesInfoDTO;
+import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbSeasonDetailDTO;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import com.duduzgomes.server_iptv.xtream.dto.CategoryDTO;
 import java.util.*;
@@ -54,7 +56,6 @@ public class SeriesService {
 
         List<Season> seasons = seasonRepository.findBySeriesIdOrderByNumber(seriesId);
 
-        // monta mapa temporada → lista de episódios
         Map<String, List<EpisodeDTO>> episodeMap = new LinkedHashMap<>();
         for (Season season : seasons) {
             List<EpisodeDTO> eps = episodeRepository
@@ -67,7 +68,7 @@ public class SeriesService {
 
         return SeriesInfoDTO.builder()
             .info(toSeriesDTO(series))
-            .episodes(episodeMap)
+            .temporadas(episodeMap)
             .build();
     }
 
@@ -88,24 +89,58 @@ public class SeriesService {
             .build();
 
         series = seriesRepository.save(series);
+        tmdbService.enriquecerSerie(series);
+        return seriesRepository.save(series);
+    }
 
-        // listas que o TmdbService vai preencher
-        List<Season>  seasons  = new ArrayList<>();
-        List<Episode> episodes = new ArrayList<>();
+    @Transactional
+    public List<Episode> cadastrarEpisodios(Long seriesId, List<CadastrarEpisodioRequest> requests) {
+        var series = seriesRepository.findById(seriesId)
+            .orElseThrow(() -> new NotFoundException("Série não encontrada"));
 
-        tmdbService.enriquecerSerie(series, seasons, episodes);
+        Map<Integer, Season> seasonCache = new HashMap<>();
+        List<Episode> episodiosSalvos = new ArrayList<>();
 
-        series = seriesRepository.save(series);
+        for (var request : requests) {
+            var season = seasonCache.computeIfAbsent(request.seasonNumber(), sn -> {
+                return seasonRepository.findBySeriesIdAndNumber(seriesId, sn)
+                    .orElseGet(() -> {
+                        var novaSeason = Season.builder()
+                            .series(series)
+                            .number(sn)
+                            .build();
+                        novaSeason = seasonRepository.save(novaSeason);
+                        tmdbService.enriquecerTemporada(novaSeason, series.getTmdbId());
+                        return seasonRepository.save(novaSeason);
+                    });
+            });
 
-        // salva temporadas e episódios
-        seasonRepository.saveAll(seasons);
-        episodeRepository.saveAll(episodes);
+            var episodio = episodeRepository.findBySeasonIdAndNumber(season.getId(), request.episodeNumber())
+                .orElseGet(() -> {
+                    var novoEpisodio = Episode.builder()
+                        .season(season)
+                        .number(request.episodeNumber())
+                        .title("...")
+                        .build();
+                    tmdbService.enriquecerEpisodio(novoEpisodio, series.getTmdbId(), request.seasonNumber());
+                    return episodeRepository.save(novoEpisodio);
+                });
 
-        return series;
+            episodiosSalvos.add(episodio);
+        }
+
+        return episodiosSalvos;
     }
 
     public List<Series> listarEntidades() {
         return seriesRepository.findByActiveTrueOrderByTitle();
+    }
+
+    public List<TmdbSeasonDetailDTO> buscarTemporadasTmdb(Long seriesId) {
+        var series = seriesRepository.findById(seriesId)
+            .orElseThrow(() -> new NotFoundException("Série não encontrada"));
+
+        return tmdbService.buscarTodasTemporadas(series);
     }
 
     @Transactional
@@ -132,7 +167,7 @@ public class SeriesService {
         List<Season>  seasons  = new ArrayList<>();
         List<Episode> episodes = new ArrayList<>();
 
-        tmdbService.enriquecerSerie(series, seasons, episodes);
+        tmdbService.enriquecerSerie(series);
         series = seriesRepository.save(series);
         seasonRepository.saveAll(seasons);
         episodeRepository.saveAll(episodes);
@@ -157,6 +192,7 @@ public class SeriesService {
             .plot(series.getSynopsis())
             .cast(series.getCastMembers())
             .genre(series.getGenre())
+            .tmbdId(series.getTmdbId())
             .rating(series.getRating() != null
                 ? series.getRating().toString() : "0")
             .rating5based(series.getRating() != null

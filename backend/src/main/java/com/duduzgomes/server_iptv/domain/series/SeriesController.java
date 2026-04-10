@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.duduzgomes.server_iptv.domain.series.episode.Episode;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.SeriesInfoDTO;
+import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbSeasonDetailDTO;
 
 import java.util.List;
 
@@ -31,10 +33,24 @@ public class SeriesController {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(seriesService.cadastrar(request.categoryId(), request.tmdbId()));
     }
+
+    @PostMapping("/{id}/episodios")
+    public ResponseEntity<List<Episode>> cadastrarEpisodios(
+        @PathVariable Long id,
+        @Valid @RequestBody List<CadastrarEpisodioRequest> request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(seriesService.cadastrarEpisodios(id, request));
+    }
     
     @GetMapping("/{id}")
     public ResponseEntity<SeriesInfoDTO> buscar(@PathVariable Long id) {
         return ResponseEntity.ok(seriesService.buscarInfo(id));
+    }
+
+    @GetMapping("/{id}/temporadas")
+    public ResponseEntity<List<TmdbSeasonDetailDTO>> buscarTemporadas(@PathVariable Long id) {
+        return ResponseEntity.ok(seriesService.buscarTemporadasTmdb(id));
     }
 
     @PatchMapping("/{id}/status")
@@ -69,5 +85,10 @@ public class SeriesController {
     record CriarSeriesRequest(
         @NotNull Long    categoryId,
         @NotNull Integer tmdbId
+    ) {}
+
+    record CadastrarEpisodioRequest(
+        @NotNull Integer seasonNumber,
+        @NotNull Integer episodeNumber
     ) {}
 }

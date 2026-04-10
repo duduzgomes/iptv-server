@@ -13,7 +13,6 @@ import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbCreditsDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbEpisodeDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbMovieDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbSeasonDetailDTO;
-import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbSeasonSummaryDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbSeriesDTO;
 
 import java.math.BigDecimal;
@@ -81,7 +80,7 @@ public class TmdbService {
         movie.setTmdbUpdatedAt(LocalDateTime.now());
     }
 
-    public void enriquecerSerie(Series series,List<Season> seasons,List<Episode> episodes) {
+    public void enriquecerSerie(Series series) {
         TmdbSeriesDTO tmdbSeries = tmdbClient.buscarSerie(series.getTmdbId());
         TmdbCreditsDTO credits   = tmdbClient.buscarCreditosSerie(series.getTmdbId());
 
@@ -111,55 +110,46 @@ public class TmdbService {
                 .collect(Collectors.joining(", ")));
         }
         series.setTmdbUpdatedAt(LocalDateTime.now());
+    }
 
-        // busca episódios de cada temporada
-        if (tmdbSeries.seasons() != null) {
-            for (TmdbSeasonSummaryDTO s : tmdbSeries.seasons()) {
+    public void enriquecerTemporada(Season season, Integer seriesTmdbId) {
+        TmdbSeasonDetailDTO tmdbTemporada = tmdbClient.buscarTemporada(seriesTmdbId, season.getNumber());
 
-                // ignora temporada 0 (extras/especiais)
-                if (s.seasonNumber() == 0) continue;
-
-                TmdbSeasonDetailDTO detail =
-                    tmdbClient.buscarTemporada(series.getTmdbId(), s.seasonNumber());
-
-                Season season = Season.builder()
-                    .series(series)
-                    .tmdbId(detail.id())
-                    .number(detail.seasonNumber())
-                    .title(detail.name())
-                    .synopsis(detail.overview())
-                    .posterUrl(detail.posterPath() != null
-                        ? imageBaseUrl + detail.posterPath() : null)
-                    .build();
-
-                seasons.add(season);
-
-                // episódios da temporada
-                if (detail.episodes() != null) {
-                    for (TmdbEpisodeDTO e : detail.episodes()) {
-                        LocalDate airDate = null;
-                        if (e.airDate() != null && !e.airDate().isBlank()) {
-                            airDate = LocalDate.parse(e.airDate());
-                        }
-
-                        Episode episode = Episode.builder()
-                            .season(season)
-                            .tmdbId(e.id())
-                            .number(e.episodeNumber())
-                            .title(e.name())
-                            .synopsis(e.overview())
-                            .posterUrl(e.stillPath() != null
-                                ? imageBaseUrl + e.stillPath() : null)
-                            .duration(e.runtime())
-                            .airDate(airDate)
-                            .filePath(null)
-                            .active(true)
-                            .build();
-
-                        episodes.add(episode);
-                    }
-                }
-            }
+        season.setTitle(tmdbTemporada.name());
+        season.setSynopsis(tmdbTemporada.overview());
+        season.setTmdbId(tmdbTemporada.id());
+        if (tmdbTemporada.posterPath() != null) {
+            season.setPosterUrl(imageBaseUrl + tmdbTemporada.posterPath());
         }
+    }
+
+    public void enriquecerEpisodio(Episode episode, Integer seriesTmdbId, Integer seasonNumber) {
+        TmdbSeasonDetailDTO tmdbTemporada = tmdbClient.buscarTemporada(seriesTmdbId, seasonNumber);
+
+        TmdbEpisodeDTO tmdbEpisodio = tmdbTemporada.episodes().stream()
+            .filter(e -> e.episodeNumber().equals(episode.getNumber()))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Episódio não encontrado no TMDB"));
+
+        episode.setTitle(tmdbEpisodio.name());
+        episode.setSynopsis(tmdbEpisodio.overview());
+        episode.setDuration(tmdbEpisodio.runtime());
+        episode.setTmdbId(tmdbEpisodio.id());
+
+        if (tmdbEpisodio.stillPath() != null) {
+            episode.setPosterUrl(imageBaseUrl + tmdbEpisodio.stillPath());
+        }
+        if (tmdbEpisodio.airDate() != null && !tmdbEpisodio.airDate().isBlank()) {
+            episode.setAirDate(LocalDate.parse(tmdbEpisodio.airDate()));
+        }
+    }
+
+    public List<TmdbSeasonDetailDTO> buscarTodasTemporadas(Series series) {
+        TmdbSeriesDTO tmdbSeries = tmdbClient.buscarSerie(series.getTmdbId());
+
+        return tmdbSeries.seasons().stream()
+            .filter(s -> s.seasonNumber() != null && s.seasonNumber() > 0)
+            .map(s -> tmdbClient.buscarTemporada(series.getTmdbId(), s.seasonNumber()))
+            .toList();
     }
 }
