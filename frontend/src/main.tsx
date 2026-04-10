@@ -7,7 +7,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import { App } from "./App";
+import { App } from "./app";
 import { useAuthStore } from "./stores/authStore";
 import "./index.css";
 

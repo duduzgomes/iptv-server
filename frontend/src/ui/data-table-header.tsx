@@ -1,4 +1,4 @@
-import { Button } from "./Button";
+import { Button } from "./button";
 
 interface DataTableHeaderProps {
   title: string;
@@ -9,13 +9,17 @@ interface DataTableHeaderProps {
 
 export function DataTableHeader({
   title,
-  count,
   onAdd,
-  addLabel = "+ Novo",
+  addLabel,
 }: DataTableHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <h1 className="text-sm tracking-widest uppercase text-[#666]">{title}</h1>
+    <div
+      data-slot="data-table-header"
+      className="flex items-center justify-between"
+    >
+      <h1 className="text-sm tracking-widest uppercase text-text-muted">
+        {title}
+      </h1>
       <Button onClick={onAdd}>{addLabel}</Button>
     </div>
   );

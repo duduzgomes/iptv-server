@@ -10,12 +10,12 @@ import { usersApi } from "../api/users";
 import { z } from "zod";
 import { userSchema, renovarSchema, type UserFormData } from "../schemas";
 import type { User } from "../types";
-import { PageSkeleton } from "../ui/PageSkeleton";
-import { Modal } from "../ui/Modal";
-import { Field, FormInput } from "../ui/FormField";
-import { Button } from "../ui/Button";
-import { StatusBadge } from "../ui/StatusBadge";
-import { DataTableHeader } from "../ui/DataTableHeader";
+import { PageSkeleton } from "../ui/page-skeleton";
+import { Field, FormInput } from "../ui/form-field";
+import { Button } from "../ui/button";
+import { StatusBadge } from "../ui/status-badge";
+import { DataTableHeader } from "../ui/data-table-header";
+import { Modal } from "../ui/modal";
 
 type Modal =
   | { type: "create" }

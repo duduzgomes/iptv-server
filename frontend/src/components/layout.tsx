@@ -45,24 +45,24 @@ export function Layout() {
       : navItems;
 
   return (
-    <div className="flex h-screen bg-[#0d0d0d] text-[#e8e8e8] font-mono overflow-hidden">
+    <div className="flex h-screen bg-bg text-text-strong overflow-hidden">
       {/* Sidebar */}
       <aside
         className={`
-        flex flex-col border-r border-[#1f1f1f] transition-all duration-300 shrink-0
+        flex flex-col transition-all duration-300 shrink-0
         ${sidebarOpen ? "w-52" : "w-14"}
       `}
       >
         {/* Logo / toggle */}
-        <div className="flex items-center h-14 px-3 border-b border-[#1f1f1f]">
+        <div className="flex items-center h-14 px-3">
           <button
             onClick={toggleSidebar}
-            className="p-1.5 rounded hover:bg-[#1a1a1a] transition-colors"
+            className="p-1.5 rounded hover:bg-surface transition-colors"
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
           {sidebarOpen && (
-            <span className="ml-3 text-sm font-bold tracking-widest uppercase text-[#e8e8e8]">
+            <span className="ml-3 text-sm font-bold tracking-widest uppercase ">
               IPTV
             </span>
           )}
@@ -81,8 +81,8 @@ export function Layout() {
                 flex items-center gap-3 px-2 py-2 rounded text-xs transition-colors
                 ${
                   isActive
-                    ? "bg-[#1a1a1a] text-white"
-                    : "text-[#666] hover:text-[#ccc] hover:bg-[#161616]"
+                    ? "bg-surface text-text-strong"
+                    : "text-text-muted hover:text-text hover:bg-surface-input"
                 }
               `}
                 >
@@ -95,10 +95,10 @@ export function Layout() {
         </nav>
 
         {/* Logout */}
-        <div className="p-2 border-t border-[#1f1f1f]">
+        <div className="p-2 border-t border-border-subtle">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-2 py-2 rounded text-xs text-[#666] hover:text-red-400 hover:bg-[#161616] transition-colors"
+            className="flex items-center gap-3 w-full px-2 py-2 rounded text-xs text-text-muted hover:text-error hover:bg-surface-input transition-colors"
           >
             <LogOut size={16} className="shrink-0" />
             {sidebarOpen && <span className="tracking-wider">Sair</span>}
@@ -109,8 +109,8 @@ export function Layout() {
       {/* Main */}
       <div className="flex flex-col flex-1 min-w-0">
         {/* Header */}
-        <header className="flex items-center justify-end h-14 px-6 border-b border-[#1f1f1f] shrink-0">
-          <span className="text-xs text-[#444] tracking-widest uppercase">
+        <header className="flex items-center justify-end h-14 px-6 border-b border-border-subtle shrink-0">
+          <span className="text-xs text-text-subtle tracking-widest uppercase">
             {username}
           </span>
         </header>

@@ -1,4 +1,4 @@
-import { PageSkeleton } from "../ui/PageSkeleton";
+import { PageSkeleton } from "../ui/page-skeleton";
 
 export function AdminsPage() {
   return (

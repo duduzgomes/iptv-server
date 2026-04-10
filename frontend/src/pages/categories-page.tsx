@@ -7,12 +7,12 @@ import { Pencil, Trash2, Power, FormInput } from "lucide-react";
 import { categoriesApi } from "../api/categories";
 import { categorySchema, type CategoryFormData } from "../schemas";
 import type { Category } from "../types";
-import { PageSkeleton } from "../ui/PageSkeleton";
-import { Button } from "../ui/Button";
-import { DataTableHeader } from "../ui/DataTableHeader";
-import { Field, FormSelect } from "../ui/FormField";
-import { Modal } from "../ui/Modal";
-import { StatusBadge } from "../ui/StatusBadge";
+import { PageSkeleton } from "../ui/page-skeleton";
+import { Button } from "../ui/button";
+import { DataTableHeader } from "../ui/data-table-header";
+import { Field, FormSelect } from "../ui/form-field";
+import { Modal } from "../ui/modal";
+import { StatusBadge } from "../ui/status-badge";
 
 export function CategoriesPage() {
   const qc = useQueryClient();

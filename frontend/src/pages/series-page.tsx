@@ -11,14 +11,14 @@ import {
 import { seriesApi } from "../api/series";
 import { tmdbApi, type TmdbSeries } from "../api/tmdb";
 import { categoriesApi } from "../api/categories";
-import { PageSkeleton } from "../ui/PageSkeleton";
+import { PageSkeleton } from "../ui/page-skeleton";
 import type { Series, SeriesInfoDTO } from "../types";
-import { Modal } from "../ui/Modal";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
-import { FormInput, FormSelect, Field } from "../ui/FormField";
-import { Button } from "../ui/Button";
-import { StatusBadge } from "../ui/StatusBadge";
-import { DataTableHeader } from "../ui/DataTableHeader";
+import { Modal } from "../ui/modal";
+import { ConfirmDialog } from "../ui/confirm-dialog";
+import { FormInput, FormSelect, Field } from "../ui/form-field";
+import { Button } from "../ui/button";
+import { StatusBadge } from "../ui/status-badge";
+import { DataTableHeader } from "../ui/data-table-header";
 
 type Step = "search" | "confirm";
 

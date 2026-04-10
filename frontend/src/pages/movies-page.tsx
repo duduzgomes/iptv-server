@@ -5,14 +5,14 @@ import { Trash2, Power, RefreshCw, Upload } from "lucide-react";
 import { moviesApi } from "../api/movies";
 import { tmdbApi, type TmdbMovie } from "../api/tmdb";
 import { categoriesApi } from "../api/categories";
-import { PageSkeleton } from "../ui/PageSkeleton";
+import { PageSkeleton } from "../ui/page-skeleton";
 import { uploadApi } from "../api/upload";
 import type { Movie } from "../types";
-import { Modal } from "../ui/Modal";
-import { FormInput, FormSelect, Field } from "../ui/FormField";
-import { Button } from "../ui/Button";
-import { StatusBadge } from "../ui/StatusBadge";
-import { DataTableHeader } from "../ui/DataTableHeader";
+import { Modal } from "../ui/modal";
+import { FormInput, FormSelect, Field } from "../ui/form-field";
+import { Button } from "../ui/button";
+import { StatusBadge } from "../ui/status-badge";
+import { DataTableHeader } from "../ui/data-table-header";
 
 const vodStatusLabel: Record<string, { label: string; status: string }> = {
   PENDING: { label: "Pendente", status: "PENDING" },

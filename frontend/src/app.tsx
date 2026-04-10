@@ -1,15 +1,15 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { UsersPage } from "./pages/UsersPage";
+import LoginPage from "./pages/login-page";
+import { DashboardPage } from "./pages/dashboard-page";
+import { UsersPage } from "./pages/users-page";
 
-import { MoviesPage } from "./pages/MoviesPage";
-import { SeriesPage } from "./pages/SeriesPage";
-import { CategoriesPage } from "./pages/CategoriesPage";
-import { AdminsPage } from "./pages/AdminsPage";
-import { Layout } from "./components/Layout";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import ChannelsPage from "./pages/ChannelsPage";
+import { MoviesPage } from "./pages/movies-page";
+import { SeriesPage } from "./pages/series-page";
+import { CategoriesPage } from "./pages/categories-page";
+import { AdminsPage } from "./pages/admins-page";
+import { Layout } from "./components/layout";
+import { ProtectedRoute } from "./components/protected-route";
+import ChannelsPage from "./pages/channels-page";
 
 export function App() {
   return (
