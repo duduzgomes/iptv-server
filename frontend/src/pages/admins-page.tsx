@@ -1,4 +1,4 @@
-import { PageSkeleton } from "../ui/page-skeleton";
+import { DataTable } from "../ui/data-table";
 
 export function AdminsPage() {
   return (
@@ -11,11 +11,12 @@ export function AdminsPage() {
           + Novo
         </button>
       </div>
-      <div className="border border-[#1f1f1f] rounded overflow-hidden">
-        <PageSkeleton
-          columns={["Usuário", "Email", "Role", "Status", "Ações"]}
-        />
-      </div>
+      <DataTable
+        columns={["Usuário", "Email", "Role", "Status", "Ações"]}
+        isLoading
+      >
+        <tbody />
+      </DataTable>
     </div>
   );
 }

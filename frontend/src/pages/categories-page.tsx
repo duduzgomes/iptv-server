@@ -3,14 +3,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Power, FormInput } from "lucide-react";
+import { Pencil, Trash2, Power } from "lucide-react";
 import { categoriesApi } from "../api/categories";
 import { categorySchema, type CategoryFormData } from "../schemas";
 import type { Category } from "../types";
-import { PageSkeleton } from "../ui/page-skeleton";
+import { DataTable, TableBody, TableRow, TableCell } from "../ui/data-table";
 import { Button } from "../ui/button";
 import { DataTableHeader } from "../ui/data-table-header";
-import { Field, FormSelect } from "../ui/form-field";
+import { Field, FormInput } from "../ui/form-field";
+import { FormSelect } from "../ui/form-select";
 import { Modal } from "../ui/modal";
 import { StatusBadge } from "../ui/status-badge";
 
@@ -86,69 +87,65 @@ export function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <DataTableHeader title="Categorias" onAdd={openCreate} />
+      <DataTableHeader
+        title="Categorias"
+        onAdd={openCreate}
+        addLabel="Adicionar"
+      />
 
-      <div className="border border-[#1f1f1f] rounded overflow-hidden">
-        {isLoading ? (
-          <PageSkeleton columns={["Nome", "Tipo", "Status", "Ações"]} />
-        ) : (
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-[#1f1f1f]">
-                {["Nome", "Tipo", "Status", "Ações"].map((col) => (
-                  <th
-                    key={col}
-                    className="text-left py-3 px-4 text-[#444] tracking-widest uppercase font-normal"
+      <DataTable
+        columns={["Nome", "Tipo", "Status", "Ações"]}
+        isLoading={isLoading}
+      >
+        <TableBody>
+          {categories?.map((cat) => (
+            <TableRow key={cat.id}>
+              <TableCell className="text-text">{cat.name}</TableCell>
+              <TableCell className="text-text-subtle">
+                {typeLabel[cat.contentType]}
+              </TableCell>
+              <TableCell>
+                <StatusBadge
+                  status={cat.active ? "ACTIVE" : "INACTIVE"}
+                  label={cat.active ? "Ativo" : "Inativo"}
+                />
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Editar categoria"
+                    onClick={() => openEdit(cat)}
                   >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {categories?.map((cat) => (
-                <tr
-                  key={cat.id}
-                  className="border-b border-[#141414] hover:bg-[#0f0f0f] transition-colors"
-                >
-                  <td className="py-3 px-4 text-[#ccc]">{cat.name}</td>
-                  <td className="py-3 px-4 text-[#555]">
-                    {typeLabel[cat.contentType]}
-                  </td>
-                  <td className="py-3 px-4">
-                    <StatusBadge
-                      status={cat.active ? "ACTIVE" : "INACTIVE"}
-                      label={cat.active ? "Ativo" : "Inativo"}
-                    />
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => openEdit(cat)}
-                        className="text-[#444] hover:text-[#ccc] transition-colors"
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        onClick={() => toggleMutation.mutate(cat.id)}
-                        className="text-[#444] hover:text-emerald-500 transition-colors"
-                      >
-                        <Power size={13} />
-                      </button>
-                      <button
-                        onClick={() => deleteMutation.mutate(cat.id)}
-                        className="text-[#444] hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                    <Pencil />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={
+                      cat.active ? "Desativar categoria" : "Ativar categoria"
+                    }
+                    onClick={() => toggleMutation.mutate(cat.id)}
+                    className="hover:text-success"
+                  >
+                    <Power />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Remover categoria"
+                    onClick={() => deleteMutation.mutate(cat.id)}
+                    className="hover:text-error"
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </DataTable>
 
       <Modal
         open={modalOpen}
@@ -176,12 +173,13 @@ export function CategoriesPage() {
           <div className="flex gap-3 justify-end pt-2">
             <Button
               variant="ghost"
+              size="lg"
               type="button"
               onClick={() => setModalOpen(false)}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={saveMutation.isPending}>
+            <Button type="submit" size="lg" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? "Salvando..." : "Salvar"}
             </Button>
           </div>

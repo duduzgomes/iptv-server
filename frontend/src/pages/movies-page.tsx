@@ -5,11 +5,12 @@ import { Trash2, Power, RefreshCw, Upload } from "lucide-react";
 import { moviesApi } from "../api/movies";
 import { tmdbApi, type TmdbMovie } from "../api/tmdb";
 import { categoriesApi } from "../api/categories";
-import { PageSkeleton } from "../ui/page-skeleton";
+import { DataTable, TableBody, TableRow, TableCell } from "../ui/data-table";
 import { uploadApi } from "../api/upload";
 import type { Movie } from "../types";
 import { Modal } from "../ui/modal";
-import { FormInput, FormSelect, Field } from "../ui/form-field";
+import { FormInput, Field } from "../ui/form-field";
+import { FormSelect } from "../ui/form-select";
 import { Button } from "../ui/button";
 import { StatusBadge } from "../ui/status-badge";
 import { DataTableHeader } from "../ui/data-table-header";
@@ -170,103 +171,76 @@ export function MoviesPage() {
 
   return (
     <div className="space-y-6">
-      <DataTableHeader title="Filmes" onAdd={openModal} />
+      <DataTableHeader title="Filmes" onAdd={openModal} addLabel="Adicionar" />
 
-      <div className="border border-[#1f1f1f] rounded overflow-hidden">
-        {isLoading ? (
-          <PageSkeleton columns={columns} />
-        ) : (
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-[#1f1f1f]">
-                {columns.map((col) => (
-                  <th
-                    key={col}
-                    className="text-left py-3 px-4 text-[#444] tracking-widest uppercase font-normal"
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data?.map((movie) => {
-                const vod = vodStatusLabel[movie.vodStatus];
-                return (
-                  <tr
-                    key={movie.id}
-                    className="border-b border-[#141414] hover:bg-[#0f0f0f] transition-colors"
-                  >
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        {movie.posterUrl ? (
-                          <img
-                            src={movie.posterUrl}
-                            alt={movie.title}
-                            className="w-8 h-12 object-cover rounded opacity-80"
-                          />
-                        ) : (
-                          <div className="w-8 h-12 bg-[#141414] rounded" />
-                        )}
-                        <div>
-                          <p className="text-[#ccc]">{movie.title}</p>
-                          <p className="text-[#444] text-[10px]">
-                            {movie.year}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-[#555]">
-                      {movie.category.name}
-                    </td>
-                    <td className="py-3 px-4">
-                      <StatusBadge status={vod.status} label={vod.label} />
-                    </td>
-                    <td className="py-3 px-4">
-                      <StatusBadge
-                        status={movie.active ? "ACTIVE" : "INACTIVE"}
-                        label={movie.active ? "Ativo" : "Inativo"}
-                      />
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => sincronizarMutation.mutate(movie.id)}
-                          className="text-[#444] hover:text-blue-400 transition-colors"
-                          title="Sincronizar TMDB"
-                        >
-                          <RefreshCw size={13} />
-                        </button>
-                        <button
-                          onClick={() => toggleMutation.mutate(movie.id)}
-                          className="text-[#444] hover:text-emerald-500 transition-colors"
-                          title="Ativar/Desativar"
-                        >
-                          <Power size={13} />
-                        </button>
-                        <button
-                          onClick={() => openUpload(movie)}
-                          className="text-[#444] hover:text-yellow-500 transition-colors"
-                          title="Upload"
-                        >
-                          <Upload size={13} />
-                        </button>
-                        <button
-                          onClick={() => deleteMutation.mutate(movie.id)}
-                          className="text-[#444] hover:text-red-500 transition-colors"
-                          title="Remover"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <DataTable columns={columns} isLoading={isLoading}>
+        <TableBody>
+          {data?.map((movie) => {
+            const vod = vodStatusLabel[movie.vodStatus];
+            return (
+              <TableRow key={movie.id}>
+                <TableCell>
+                  <div className="flex flex-col  gap-1">
+                    <p className="text-text">{movie.title}</p>
+                    <p className="text-text-muted text-xs">{movie.year}</p>
+                  </div>
+                </TableCell>
+                <TableCell className="text-text-subtle">
+                  {movie.category.name}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={vod.status} label={vod.label} />
+                </TableCell>
+                <TableCell>
+                  <StatusBadge
+                    status={movie.active ? "ACTIVE" : "INACTIVE"}
+                    label={movie.active ? "Ativo" : "Inativo"}
+                  />
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Sincronizar TMDB"
+                      onClick={() => sincronizarMutation.mutate(movie.id)}
+                      className="hover:text-info"
+                    >
+                      <RefreshCw />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Ativar/Desativar"
+                      onClick={() => toggleMutation.mutate(movie.id)}
+                      className="hover:text-success"
+                    >
+                      <Power />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Upload"
+                      onClick={() => openUpload(movie)}
+                    >
+                      <Upload />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Remover filme"
+                      onClick={() => deleteMutation.mutate(movie.id)}
+                      className="hover:text-error"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </DataTable>
 
       {/* Modal upload */}
       <Modal

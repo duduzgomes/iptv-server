@@ -10,14 +10,15 @@ import { usersApi } from "../api/users";
 import { z } from "zod";
 import { userSchema, renovarSchema, type UserFormData } from "../schemas";
 import type { User } from "../types";
-import { PageSkeleton } from "../ui/page-skeleton";
+import { DataTable, TableBody, TableRow, TableCell } from "../ui/data-table";
 import { Field, FormInput } from "../ui/form-field";
 import { Button } from "../ui/button";
 import { StatusBadge } from "../ui/status-badge";
 import { DataTableHeader } from "../ui/data-table-header";
-import { Modal } from "../ui/modal";
+import { Modal, ModalFooter } from "../ui/modal";
+import { ConfirmDialog } from "../ui/confirm-dialog";
 
-type Modal =
+type ModalState =
   | { type: "create" }
   | { type: "edit"; user: User }
   | { type: "renovar"; user: User }
@@ -26,7 +27,8 @@ type Modal =
 export function UsersPage() {
   const qc = useQueryClient();
   const [page, setPage] = useState(0);
-  const [modal, setModal] = useState<Modal>(null);
+  const [modal, setModal] = useState<ModalState>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [visiblePasswords, setVisiblePasswords] = useState<Set<number>>(
     new Set(),
   );
@@ -128,6 +130,7 @@ export function UsersPage() {
     mutationFn: (id: number) => usersApi.remove(id),
     onSuccess: () => {
       toast.success("Usuário removido");
+      setDeleteId(null);
       invalidate();
     },
     onError: () => toast.error("Erro ao remover usuário"),
@@ -144,106 +147,100 @@ export function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <DataTableHeader title="Usuários" onAdd={openCreate} />
+      <DataTableHeader
+        title="Usuários"
+        onAdd={openCreate}
+        addLabel="Adicionar"
+      />
 
-      <div className="border border-[#1f1f1f] rounded overflow-hidden">
-        {isLoading ? (
-          <PageSkeleton columns={columns} />
-        ) : (
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-[#1f1f1f]">
-                {columns.map((col) => (
-                  <th
-                    key={col}
-                    className="text-left py-3 px-4 text-[#444] tracking-widest uppercase font-normal"
+      <DataTable columns={columns} isLoading={isLoading}>
+        <TableBody>
+          {data?.content.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="text-text">{user.username}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <span className="text-text-subtle">
+                    {visiblePasswords.has(user.id) ? user.password : "••••••••"}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={
+                      visiblePasswords.has(user.id)
+                        ? "Ocultar senha"
+                        : "Mostrar senha"
+                    }
+                    onClick={() => togglePassword(user.id)}
                   >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data?.content.map((user) => (
-                <tr
-                  key={user.id}
-                  className="border-b border-[#141414] hover:bg-[#0f0f0f] transition-colors"
-                >
-                  <td className="py-3 px-4 text-[#ccc] font-mono">
-                    {user.username}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[#555]">
-                        {visiblePasswords.has(user.id)
-                          ? user.password
-                          : "••••••••"}
-                      </span>
-                      <button
-                        onClick={() => togglePassword(user.id)}
-                        className="text-[#333] hover:text-[#888] transition-colors"
-                      >
-                        {visiblePasswords.has(user.id) ? (
-                          <EyeOff size={12} />
-                        ) : (
-                          <Eye size={12} />
-                        )}
-                      </button>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-[#555]">
-                    {user.maxConnections}
-                  </td>
-                  <td className="py-3 px-4 text-[#555]">
-                    {format(new Date(user.expiresAt), "dd/MM/yyyy", {
-                      locale: ptBR,
-                    })}
-                  </td>
-                  <td className="py-3 px-4">
-                    <StatusBadge
-                      status={user.active ? "ACTIVE" : "INACTIVE"}
-                      label={user.active ? "Ativo" : "Inativo"}
-                    />
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => openEdit(user)}
-                        className="text-[#444] hover:text-[#ccc] transition-colors"
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        onClick={() => openRenovar(user)}
-                        className="text-[#444] hover:text-blue-400 transition-colors"
-                      >
-                        <RefreshCw size={13} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          toggleMutation.mutate({
-                            id: user.id,
-                            active: !user.active,
-                          })
-                        }
-                        className="text-[#444] hover:text-emerald-500 transition-colors"
-                      >
-                        <Power size={13} />
-                      </button>
-                      <button
-                        onClick={() => deleteMutation.mutate(user.id)}
-                        className="text-[#444] hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                    {visiblePasswords.has(user.id) ? <EyeOff /> : <Eye />}
+                  </Button>
+                </div>
+              </TableCell>
+              <TableCell className="text-text-subtle">
+                {user.maxConnections}
+              </TableCell>
+              <TableCell className="text-text-subtle">
+                {format(new Date(user.expiresAt), "dd/MM/yyyy", {
+                  locale: ptBR,
+                })}
+              </TableCell>
+              <TableCell>
+                <StatusBadge
+                  status={user.active ? "ACTIVE" : "INACTIVE"}
+                  label={user.active ? "Ativo" : "Inativo"}
+                />
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Editar usuário"
+                    onClick={() => openEdit(user)}
+                  >
+                    <Pencil />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Renovar validade"
+                    onClick={() => openRenovar(user)}
+                    className="hover:text-info"
+                  >
+                    <RefreshCw />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={
+                      user.active ? "Desativar usuário" : "Ativar usuário"
+                    }
+                    onClick={() =>
+                      toggleMutation.mutate({
+                        id: user.id,
+                        active: !user.active,
+                      })
+                    }
+                    className="hover:text-success"
+                  >
+                    <Power />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Remover usuário"
+                    onClick={() => setDeleteId(user.id)}
+                    className="hover:text-error"
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </DataTable>
 
       {data && data.totalPages > 1 && (
         <div className="flex items-center justify-end gap-3">
@@ -254,7 +251,7 @@ export function UsersPage() {
           >
             Anterior
           </Button>
-          <span className="text-[10px] text-[#333]">
+          <span className="text-[10px] text-text-ghost">
             {page + 1} / {data.totalPages}
           </span>
           <Button
@@ -296,15 +293,17 @@ export function UsersPage() {
           >
             <FormInput type="number" {...userForm.register("validadeDias")} />
           </Field>
-          <div className="flex gap-3 justify-end pt-2">
+          <ModalFooter>
             <Button
               variant="ghost"
+              size="lg"
               type="button"
               onClick={() => setModal(null)}
             >
               Cancelar
             </Button>
             <Button
+              size="lg"
               type="submit"
               disabled={createMutation.isPending || editMutation.isPending}
             >
@@ -312,7 +311,7 @@ export function UsersPage() {
                 ? "Salvando..."
                 : "Salvar"}
             </Button>
-          </div>
+          </ModalFooter>
         </form>
       </Modal>
 
@@ -324,7 +323,7 @@ export function UsersPage() {
       >
         {modal?.type === "renovar" && (
           <>
-            <p className="text-[10px] text-[#444]">{modal.user.username}</p>
+            <p className="text-[10px] text-text-ghost">{modal.user.username}</p>
             <form
               onSubmit={renovarForm.handleSubmit((d) =>
                 renovarMutation.mutate({ id: modal.user.id, dias: d.dias }),
@@ -337,7 +336,7 @@ export function UsersPage() {
               >
                 <FormInput type="number" {...renovarForm.register("dias")} />
               </Field>
-              <div className="flex gap-3 justify-end pt-2">
+              <ModalFooter>
                 <Button
                   variant="ghost"
                   type="button"
@@ -348,11 +347,22 @@ export function UsersPage() {
                 <Button type="submit" disabled={renovarMutation.isPending}>
                   {renovarMutation.isPending ? "Renovando..." : "Renovar"}
                 </Button>
-              </div>
+              </ModalFooter>
             </form>
           </>
         )}
       </Modal>
+
+      {/* Confirmação de exclusão */}
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Remover usuário"
+        message="Esta ação não pode ser desfeita. O usuário será removido permanentemente."
+        confirmLabel="Remover"
+        loading={deleteMutation.isPending}
+        onConfirm={() => deleteId !== null && deleteMutation.mutate(deleteId)}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 }
