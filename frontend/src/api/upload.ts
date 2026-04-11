@@ -21,6 +21,21 @@ export const uploadApi = {
       etags,
     }),
 
+  iniciarEpisodio: (episodeId: number, totalChunks: number) =>
+    client
+      .post<IniciarResponse>(
+        `/admin/upload/episodes/${episodeId}/iniciar`,
+        null,
+        { params: { totalChunks } },
+      )
+      .then((r) => r.data),
+
+  concluirEpisodio: (episodeId: number, uploadId: string, etags: string[]) =>
+    client.post(`/admin/upload/episodes/${episodeId}/concluir`, {
+      uploadId,
+      etags,
+    }),
+
   enviarChunk: async (url: string, chunk: Blob): Promise<string> => {
     const res = await fetch(url, {
       method: "PUT",
