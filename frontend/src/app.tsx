@@ -5,6 +5,7 @@ import { UsersPage } from "./pages/users-page";
 
 import { MoviesPage } from "./pages/movies-page";
 import { SeriesPage } from "./pages/series-page";
+import { SeriesDetailPage } from "./pages/series-detail-page";
 import { CategoriesPage } from "./pages/categories-page";
 import { AdminsPage } from "./pages/admins-page";
 import { Layout } from "./components/layout";
@@ -23,6 +24,7 @@ export function App() {
           <Route path="channels" element={<ChannelsPage />} />
           <Route path="movies" element={<MoviesPage />} />
           <Route path="series" element={<SeriesPage />} />
+          <Route path="series/:id" element={<SeriesDetailPage />} />
           <Route path="categories" element={<CategoriesPage />} />
 
           <Route element={<ProtectedRoute requiredRole="SUPERADMIN" />}>

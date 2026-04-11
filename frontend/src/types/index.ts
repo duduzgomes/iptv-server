@@ -83,6 +83,30 @@ export interface SeriesInfoDTO {
     cover?: string;
     genre?: string;
     rating?: string;
+    plot?: string;
+    cast?: string;
+    director?: string;
+    release_date?: string;
+    backdrop_path?: string[];
   };
-  episodes: Record<string, EpisodeDTO[]>;
+  temporadas: Record<string, EpisodeDTO[]>;
+}
+
+export interface TmdbEpisodeDTO {
+  id: number;
+  episode_number: number;
+  name: string;
+  overview: string;
+  still_path: string | null;
+  runtime: number | null;
+  air_date: string | null;
+}
+
+export interface TmdbSeasonDetailDTO {
+  id: number;
+  season_number: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  episodes: TmdbEpisodeDTO[];
 }
