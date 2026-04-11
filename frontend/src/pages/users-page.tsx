@@ -3,12 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Power, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Pencil, Trash2, Power, Eye, EyeOff } from "lucide-react";
+import { RowActions } from "../ui/row-actions";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usersApi } from "../api/users";
 import { z } from "zod";
-import { userSchema, renovarSchema, type UserFormData } from "../schemas";
+import { userSchema, type UserFormData } from "../schemas";
 import type { User } from "../types";
 import { DataTable, TableBody, TableRow, TableCell } from "../ui/data-table";
 import { Field, FormInput } from "../ui/form-field";
@@ -18,11 +19,7 @@ import { DataTableHeader } from "../ui/data-table-header";
 import { Modal, ModalFooter } from "../ui/modal";
 import { ConfirmDialog } from "../ui/confirm-dialog";
 
-type ModalState =
-  | { type: "create" }
-  | { type: "edit"; user: User }
-  | { type: "renovar"; user: User }
-  | null;
+type ModalState = { type: "create" } | { type: "edit"; user: User } | null;
 
 export function UsersPage() {
   const qc = useQueryClient();
@@ -55,15 +52,6 @@ export function UsersPage() {
     defaultValues: { maxConnections: "1", validadeDias: "30" },
   });
 
-  const renovarForm = useForm<
-    z.input<typeof renovarSchema>,
-    unknown,
-    z.output<typeof renovarSchema>
-  >({
-    resolver: zodResolver(renovarSchema),
-    defaultValues: { dias: "30" },
-  });
-
   function openCreate() {
     userForm.reset({ maxConnections: "1", validadeDias: "30" });
     setModal({ type: "create" });
@@ -75,11 +63,6 @@ export function UsersPage() {
       validadeDias: "30",
     });
     setModal({ type: "edit", user });
-  }
-
-  function openRenovar(user: User) {
-    renovarForm.reset({ dias: "30" });
-    setModal({ type: "renovar", user });
   }
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["users"] });
@@ -103,17 +86,6 @@ export function UsersPage() {
       invalidate();
     },
     onError: () => toast.error("Erro ao atualizar usuário"),
-  });
-
-  const renovarMutation = useMutation({
-    mutationFn: ({ id, dias }: { id: number; dias: number }) =>
-      usersApi.renovar(id, dias),
-    onSuccess: () => {
-      toast.success("Validade renovada");
-      setModal(null);
-      invalidate();
-    },
-    onError: () => toast.error("Erro ao renovar validade"),
   });
 
   const toggleMutation = useMutation({
@@ -159,8 +131,8 @@ export function UsersPage() {
             <TableRow key={user.id}>
               <TableCell className="text-text">{user.username}</TableCell>
               <TableCell>
-                <div className="flex items-center gap-2">
-                  <span className="text-text-subtle">
+                <div className="flex items-center gap-2 ">
+                  <span className="text-text-subtle w-24 truncate inline-block">
                     {visiblePasswords.has(user.id) ? user.password : "••••••••"}
                   </span>
                   <Button
@@ -177,7 +149,7 @@ export function UsersPage() {
                   </Button>
                 </div>
               </TableCell>
-              <TableCell className="text-text-subtle">
+              <TableCell className="text-text-subtle ">
                 {user.maxConnections}
               </TableCell>
               <TableCell className="text-text-subtle">
@@ -192,50 +164,30 @@ export function UsersPage() {
                 />
               </TableCell>
               <TableCell>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Editar usuário"
-                    onClick={() => openEdit(user)}
-                  >
-                    <Pencil />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Renovar validade"
-                    onClick={() => openRenovar(user)}
-                    className="hover:text-info"
-                  >
-                    <RefreshCw />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label={
-                      user.active ? "Desativar usuário" : "Ativar usuário"
-                    }
-                    onClick={() =>
-                      toggleMutation.mutate({
-                        id: user.id,
-                        active: !user.active,
-                      })
-                    }
-                    className="hover:text-success"
-                  >
-                    <Power />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Remover usuário"
-                    onClick={() => setDeleteId(user.id)}
-                    className="hover:text-error"
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
+                <RowActions
+                  actions={[
+                    {
+                      label: "Editar",
+                      icon: <Pencil />,
+                      onClick: () => openEdit(user),
+                    },
+                    {
+                      label: user.active ? "Desativar" : "Ativar",
+                      icon: <Power />,
+                      onClick: () =>
+                        toggleMutation.mutate({
+                          id: user.id,
+                          active: !user.active,
+                        }),
+                    },
+                    {
+                      label: "Remover",
+                      icon: <Trash2 />,
+                      onClick: () => setDeleteId(user.id),
+                      danger: true,
+                    },
+                  ]}
+                />
               </TableCell>
             </TableRow>
           ))}
@@ -251,7 +203,7 @@ export function UsersPage() {
           >
             Anterior
           </Button>
-          <span className="text-[10px] text-text-ghost">
+          <span className="text-xs text-text-ghost">
             {page + 1} / {data.totalPages}
           </span>
           <Button
@@ -313,44 +265,6 @@ export function UsersPage() {
             </Button>
           </ModalFooter>
         </form>
-      </Modal>
-
-      {/* Modal renovar */}
-      <Modal
-        open={modal?.type === "renovar"}
-        onClose={() => setModal(null)}
-        title="Renovar validade"
-      >
-        {modal?.type === "renovar" && (
-          <>
-            <p className="text-[10px] text-text-ghost">{modal.user.username}</p>
-            <form
-              onSubmit={renovarForm.handleSubmit((d) =>
-                renovarMutation.mutate({ id: modal.user.id, dias: d.dias }),
-              )}
-              className="space-y-4"
-            >
-              <Field
-                label="Dias"
-                error={renovarForm.formState.errors.dias?.message}
-              >
-                <FormInput type="number" {...renovarForm.register("dias")} />
-              </Field>
-              <ModalFooter>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => setModal(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={renovarMutation.isPending}>
-                  {renovarMutation.isPending ? "Renovando..." : "Renovar"}
-                </Button>
-              </ModalFooter>
-            </form>
-          </>
-        )}
       </Modal>
 
       {/* Confirmação de exclusão */}

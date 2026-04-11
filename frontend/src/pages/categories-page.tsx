@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Pencil, Trash2, Power } from "lucide-react";
+import { RowActions } from "../ui/row-actions";
 import { categoriesApi } from "../api/categories";
 import { categorySchema, type CategoryFormData } from "../schemas";
 import type { Category } from "../types";
@@ -111,36 +112,26 @@ export function CategoriesPage() {
                 />
               </TableCell>
               <TableCell>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Editar categoria"
-                    onClick={() => openEdit(cat)}
-                  >
-                    <Pencil />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label={
-                      cat.active ? "Desativar categoria" : "Ativar categoria"
-                    }
-                    onClick={() => toggleMutation.mutate(cat.id)}
-                    className="hover:text-success"
-                  >
-                    <Power />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Remover categoria"
-                    onClick={() => deleteMutation.mutate(cat.id)}
-                    className="hover:text-error"
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
+                <RowActions
+                  actions={[
+                    {
+                      label: "Editar",
+                      icon: <Pencil />,
+                      onClick: () => openEdit(cat),
+                    },
+                    {
+                      label: cat.active ? "Desativar" : "Ativar",
+                      icon: <Power />,
+                      onClick: () => toggleMutation.mutate(cat.id),
+                    },
+                    {
+                      label: "Remover",
+                      icon: <Trash2 />,
+                      onClick: () => deleteMutation.mutate(cat.id),
+                      danger: true,
+                    },
+                  ]}
+                />
               </TableCell>
             </TableRow>
           ))}

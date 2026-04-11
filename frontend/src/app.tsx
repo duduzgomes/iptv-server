@@ -10,7 +10,7 @@ import { CategoriesPage } from "./pages/categories-page";
 import { AdminsPage } from "./pages/admins-page";
 import { Layout } from "./components/layout";
 import { ProtectedRoute } from "./components/protected-route";
-import ChannelsPage from "./pages/channels-page";
+import { ChannelsPage } from "./pages/channels-page";
 
 export function App() {
   return (

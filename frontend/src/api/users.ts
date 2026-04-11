@@ -17,11 +17,6 @@ export const usersApi = {
     data: { maxConnections: number; validadeDias: number },
   ) => client.put<User>(`/admin/users/${id}`, data).then((r) => r.data),
 
-  renovar: (id: number, dias: number) =>
-    client
-      .patch<User>(`/admin/users/${id}/renovar`, null, { params: { dias } })
-      .then((r) => r.data),
-
   toggleStatus: (id: number, active: boolean) =>
     client
       .patch(`/admin/users/${id}/status`, null, { params: { active } })

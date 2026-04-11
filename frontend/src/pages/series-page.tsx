@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Trash2, Power, RefreshCw } from "lucide-react";
+import { RowActions } from "../ui/row-actions";
 import { seriesApi } from "../api/series";
 import { tmdbApi, type TmdbSeries } from "../api/tmdb";
 import { categoriesApi } from "../api/categories";
@@ -137,44 +138,31 @@ export function SeriesPage() {
               <TableCell>
                 <StatusBadge
                   status={s.active ? "ACTIVE" : "INACTIVE"}
-                  label={s.active ? "Ativa" : "Inativa"}
+                  label={s.active ? "Ativo" : "Inativo"}
                 />
               </TableCell>
               <TableCell>
-                <div
-                  className="flex gap-1"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Sincronizar TMDB"
-                    onClick={() => syncMut.mutate(s.id)}
-                    className="hover:text-info"
-                  >
-                    <RefreshCw />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label={s.active ? "Desativar série" : "Ativar série"}
-                    onClick={() =>
-                      toggleMut.mutate({ id: s.id, active: !s.active })
-                    }
-                    className="hover:text-success"
-                  >
-                    <Power />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Remover série"
-                    onClick={() => setConfirmDelete(s)}
-                    className="hover:text-error"
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
+                <RowActions
+                  actions={[
+                    {
+                      label: "Sincronizar TMDB",
+                      icon: <RefreshCw />,
+                      onClick: () => syncMut.mutate(s.id),
+                    },
+                    {
+                      label: s.active ? "Desativar" : "Ativar",
+                      icon: <Power />,
+                      onClick: () =>
+                        toggleMut.mutate({ id: s.id, active: !s.active }),
+                    },
+                    {
+                      label: "Remover",
+                      icon: <Trash2 />,
+                      onClick: () => setConfirmDelete(s),
+                      danger: true,
+                    },
+                  ]}
+                />
               </TableCell>
             </TableRow>
           ))}

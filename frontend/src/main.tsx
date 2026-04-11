@@ -29,7 +29,31 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <App />
-        <Toaster richColors position="top-right" />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            unstyled: true,
+            classNames: {
+              toast: [
+                "flex items-start gap-3 w-full rounded-md px-4 py-3",
+                "border border-border bg-surface shadow-lg",
+                "text-xs text-text font-sans",
+              ].join(" "),
+              title: "text-xs font-medium text-text",
+              description: "text-xs text-text-muted mt-0.5",
+              icon: "[&_svg]:size-3.5 shrink-0 mt-0.5",
+              success: "border-border [&_[data-icon]]:text-success",
+              error: "border-error/30 [&_[data-icon]]:text-error",
+              warning: "border-warning/30 [&_[data-icon]]:text-warning",
+              info: "border-info/30 [&_[data-icon]]:text-info",
+              closeButton: [
+                "absolute top-2 right-2 rounded p-0.5",
+                "text-text-muted hover:text-text transition-colors",
+                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border-focus",
+              ].join(" "),
+            },
+          }}
+        />
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

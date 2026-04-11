@@ -118,7 +118,7 @@ export function Layout() {
         </header>
 
         {/* Conteúdo com animação de rota */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -126,7 +126,7 @@ export function Layout() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15 }}
-              className="h-full grid grid-cols-12 py-6"
+              className="h-full grid grid-cols-12 py-6 overflow-y-auto"
             >
               <div className="col-start-3 col-span-8">
                 <Outlet />
