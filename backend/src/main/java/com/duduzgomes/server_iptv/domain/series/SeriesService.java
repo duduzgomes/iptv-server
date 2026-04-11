@@ -191,6 +191,8 @@ public class SeriesService {
             .cover(series.getPosterUrl())
             .plot(series.getSynopsis())
             .cast(series.getCastMembers())
+            .director(series.getDirector())
+            .releaseDate(series.getYear() != null ? String.valueOf(series.getYear()) : null)
             .genre(series.getGenre())
             .tmbdId(series.getTmdbId())
             .rating(series.getRating() != null

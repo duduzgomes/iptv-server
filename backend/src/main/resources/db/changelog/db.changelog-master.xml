@@ -15,5 +15,6 @@
     <include file="migrations/008-alter-access-logs.sql" relativeToChangelogFile="true"/>
     <include file="migrations/009-alter-vod-status.sql" relativeToChangelogFile="true"/>
     <include file="migrations/010-alter-channels-num-unique.sql" relativeToChangelogFile="true"/>
+    <include file="migrations/011-alter-series-add-director-year.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

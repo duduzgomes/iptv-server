@@ -9,6 +9,7 @@ import com.duduzgomes.server_iptv.domain.movie.Movie;
 import com.duduzgomes.server_iptv.domain.series.Series;
 import com.duduzgomes.server_iptv.domain.series.episode.Episode;
 import com.duduzgomes.server_iptv.domain.series.season.Season;
+import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbCreatedByDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbCreditsDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbEpisodeDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbMovieDTO;
@@ -103,10 +104,18 @@ public class TmdbService {
                 .map(g -> g.name())
                 .collect(Collectors.joining(", ")));
         }
+        if (tmdbSeries.firstAirDate() != null && !tmdbSeries.firstAirDate().isBlank()) {
+            series.setYear(Integer.parseInt(tmdbSeries.firstAirDate().substring(0, 4)));
+        }
         if (credits.cast() != null) {
             series.setCastMembers(credits.cast().stream()
                 .limit(5)
                 .map(c -> c.name())
+                .collect(Collectors.joining(", ")));
+        }
+        if (tmdbSeries.createdBy() != null && !tmdbSeries.createdBy().isEmpty()) {
+            series.setDirector(tmdbSeries.createdBy().stream()
+                .map(TmdbCreatedByDTO::name)
                 .collect(Collectors.joining(", ")));
         }
         series.setTmdbUpdatedAt(LocalDateTime.now());

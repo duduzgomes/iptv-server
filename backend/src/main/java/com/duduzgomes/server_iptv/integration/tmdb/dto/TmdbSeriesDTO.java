@@ -9,6 +9,9 @@ public record TmdbSeriesDTO(
     String overview,
     String status,
 
+    @JsonProperty("created_by")
+    List<TmdbCreatedByDTO> createdBy,
+
     @JsonProperty("vote_average")
     Double voteAverage,
 

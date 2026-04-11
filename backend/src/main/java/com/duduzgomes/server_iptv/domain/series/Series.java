@@ -43,6 +43,11 @@ public class Series {
     @Column(columnDefinition = "TEXT")
     private String castMembers;
 
+    @Column(length = 255)
+    private String director;
+
+    private Integer year;
+
     @Column(precision = 3, scale = 1)
     private BigDecimal rating;
 

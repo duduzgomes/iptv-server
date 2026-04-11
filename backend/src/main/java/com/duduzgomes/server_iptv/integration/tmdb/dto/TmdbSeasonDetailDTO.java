@@ -10,6 +10,7 @@ public record TmdbSeasonDetailDTO(
     Integer seasonNumber,
 
     String name,
+    
     String overview,
 
     @JsonProperty("poster_path")
