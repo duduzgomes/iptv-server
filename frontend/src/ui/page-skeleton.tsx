@@ -7,15 +7,15 @@ interface PageSkeletonProps {
 
 export function PageSkeleton({ columns }: PageSkeletonProps) {
   return (
-    <div data-slot="page-skeleton" className="overflow-x-auto">
-      <table className="w-full text-xs">
+    <div
+      data-slot="page-skeleton"
+      className="bg-surface border border-border-subtle rounded-xl overflow-hidden"
+    >
+      <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border-subtle">
+          <tr className="border-b border-border-subtle text-text-muted text-left">
             {columns.map((col) => (
-              <th
-                key={col}
-                className="text-left py-3 px-4 text-text-subtle tracking-widest uppercase font-normal"
-              >
+              <th key={col} className="px-4 py-3 font-medium">
                 {col}
               </th>
             ))}
@@ -25,8 +25,12 @@ export function PageSkeleton({ columns }: PageSkeletonProps) {
           {Array.from({ length: 6 }).map((_, i) => (
             <tr key={i} className="border-b border-border-subtle">
               {columns.map((col) => (
-                <td key={col} className="py-3 px-4">
-                  <Skeleton baseColor="#141414" highlightColor="#1f1f1f" height={12} />
+                <td key={col} className="px-4 py-3">
+                  <Skeleton
+                    baseColor="#141414"
+                    highlightColor="#1f1f1f"
+                    height={12}
+                  />
                 </td>
               ))}
             </tr>
