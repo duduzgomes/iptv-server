@@ -69,20 +69,6 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDTO renovar(Long id, int dias) {
-        var user = userRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
-
-        LocalDateTime base = user.getExpiresAt()
-            .isBefore(LocalDateTime.now()) ? LocalDateTime.now() : user.getExpiresAt();
-
-        user.setExpiresAt(base.plusDays(dias));
-        userRepository.save(user);
-
-        return toDTO(user, user.getPassword());
-    }
-
-    @Transactional
     public void alterarStatus(Long id, boolean active) {
         var user = userRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));

@@ -51,14 +51,6 @@ public class UserController {
         );
     }
 
-    @PatchMapping("/{id}/renovar")
-    public ResponseEntity<UserResponseDTO> renovar(
-        @PathVariable Long id,
-        @RequestParam @Min(1) int dias
-    ) {
-        return ResponseEntity.ok(userService.renovar(id, dias));
-    }
-
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> alterarStatus(
         @PathVariable Long id,

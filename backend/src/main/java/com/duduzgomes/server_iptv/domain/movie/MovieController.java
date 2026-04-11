@@ -37,11 +37,8 @@ public class MovieController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Void> alterarStatus(
-        @PathVariable Long id,
-        @RequestParam boolean active
-    ) {
-        movieService.alterarStatus(id, active);
+    public ResponseEntity<Void> alterarStatus(@PathVariable Long id) {
+        movieService.alterarStatus(id);
         return ResponseEntity.ok().build();
     }
 

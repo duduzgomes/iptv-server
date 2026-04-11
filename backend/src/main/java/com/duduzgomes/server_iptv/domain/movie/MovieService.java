@@ -141,10 +141,10 @@ public class MovieService {
     }
 
     @Transactional
-    public void alterarStatus(Long id, boolean active) {
+    public void alterarStatus(Long id) {
         var movie = movieRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
-        movie.setActive(active);
+        movie.setActive(!movie.getActive());
         movieRepository.save(movie);
     }
 
