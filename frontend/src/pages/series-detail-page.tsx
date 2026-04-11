@@ -102,78 +102,104 @@ export function SeriesDetailPage() {
   const { info } = data;
   const releaseYear = info.release_date?.slice(0, 4) ?? "—";
 
+  const backdrop = info.backdrop_path?.[0]
+    ? `https://image.tmdb.org/t/p/w1280${info.backdrop_path[0]}`
+    : null;
+
   return (
-    <div className="space-y-8">
-      {/* Voltar */}
-      <button
-        onClick={() => navigate("/series")}
-        className="flex items-center gap-2 text-base text-text-muted hover:text-text transition-colors"
-      >
-        <ArrowLeft size={32} />
-        Voltar
-      </button>
-
-      {/* Título */}
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-text-strong">{info.name}</h1>
-        <Button
-          variant="default"
-          size="lg"
-          onClick={() => setAddEpisodesOpen(true)}
-        >
-          <Plus />
-          Cadastrar episódios
-        </Button>
-      </div>
-
-      {/* Poster + informações */}
-      <div className="flex gap-10 ">
-        {/* Poster */}
-        {info.cover ? (
-          <img
-            src={info.cover}
-            alt={info.name}
-            className="w-52 object-cover border border-border  rounded-md shrink-0"
-          />
-        ) : (
-          <div className="w-52 bg-surface rounded-xl shrink-0" />
+    <div className="space-y-4">
+      {/* Hero — backdrop cobre até o seletor de temporada */}
+      <div className="relative -mx-8 px-8 pt-8 pb-8 ">
+        {/* Imagem de fundo */}
+        {backdrop && (
+          <>
+            <div className="absolute inset-0 bg-linear-to-b from-bg/10 via-bg/50 to-bg pointer-events-none" />
+            <img
+              src={backdrop}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none select-none opacity-25"
+            />
+            {/* fade superior — vindo do header */}
+            <div className="absolute inset-0 bg-linear-to-b from-bg via-transparent to-transparent pointer-events-none" />
+            {/* fade lateral */}
+            <div className="absolute inset-0 bg-linear-to-r from-bg via-transparent to-bg pointer-events-none" />
+            {/* fade inferior — dissolve até o bg na altura do label */}
+            <div className="absolute inset-0 bg-linear-to-b from-transparent via-bg/50 to-bg pointer-events-none" />
+          </>
         )}
 
-        {/* Informações */}
-        <div className="flex flex-col gap-4 pt-1 flex-1">
-          <div className="flex flex-wrap gap-x-16 gap-y-3">
-            <div>
-              <p className="text-sm font-semibold text-text">
-                Data de Lançamento
-              </p>
-              <p className="text-sm text-text-muted">{releaseYear}</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-text">Gênero</p>
-              <p className="text-sm text-text-muted">{info.genre ?? "—"}</p>
-            </div>
-          </div>
+        {/* Voltar */}
+        <button
+          onClick={() => navigate("/series")}
+          className="relative flex items-center gap-2 text-base mb-6 text-text-muted hover:text-text transition-colors"
+        >
+          <ArrowLeft size={32} />
+          Voltar
+        </button>
 
-          <div>
-            <p className="text-sm font-semibold text-text">Diretor</p>
-            <p className="text-sm text-text-muted">{info.director ?? "—"}</p>
-          </div>
+        {/* Título */}
+        <div className="relative flex items-center justify-between space-y-4 gap-4">
+          <h1 className="text-2xl font-bold text-text-strong">{info.name}</h1>
+          <Button
+            variant="default"
+            size="lg"
+            onClick={() => setAddEpisodesOpen(true)}
+          >
+            <Plus />
+            Cadastrar episódios
+          </Button>
+        </div>
 
-          {info.cast && (
-            <div>
-              <p className="text-sm font-semibold text-text">Elenco</p>
-              <p className="text-sm text-text-muted">{info.cast}</p>
-            </div>
+        {/* Poster + informações */}
+        <div className="relative flex gap-10">
+          {/* Poster */}
+          {info.cover ? (
+            <img
+              src={info.cover}
+              alt={info.name}
+              className="w-52 object-cover border border-border rounded-md shrink-0"
+            />
+          ) : (
+            <div className="w-52 bg-surface rounded-xl shrink-0" />
           )}
 
-          {info.plot && (
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold text-text">Sinopse</p>
-              <p className="text-sm text-text-muted leading-relaxed">
-                {info.plot}
-              </p>
+          {/* Informações */}
+          <div className="flex flex-col gap-4 pt-1 flex-1">
+            <div className="flex flex-wrap gap-x-16 gap-y-3">
+              <div>
+                <p className="text-sm font-semibold text-text">
+                  Data de Lançamento
+                </p>
+                <p className="text-sm text-text-muted">{releaseYear}</p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-text">Gênero</p>
+                <p className="text-sm text-text-muted">{info.genre ?? "—"}</p>
+              </div>
             </div>
-          )}
+
+            <div>
+              <p className="text-sm font-semibold text-text">Diretor</p>
+              <p className="text-sm text-text-muted">{info.director ?? "—"}</p>
+            </div>
+
+            {info.cast && (
+              <div>
+                <p className="text-sm font-semibold text-text">Elenco</p>
+                <p className="text-sm text-text-muted">{info.cast}</p>
+              </div>
+            )}
+
+            {info.plot && (
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold text-text">Sinopse</p>
+                <p className="text-sm text-text-muted leading-relaxed">
+                  {info.plot}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
