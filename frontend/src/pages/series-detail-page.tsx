@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, ChevronDown, Upload } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, ChevronDown, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { seriesApi } from "../api/series";
+import { uploadApi } from "../api/upload";
 import { Button } from "../ui/button";
-import { FormInput } from "../ui/form-field";
-import { Modal, ModalFooter, ModalTitle } from "../ui/modal";
+import { Modal, ModalFooter } from "../ui/modal";
+import { AddEpisodesModal } from "../components/add-episodes-modal";
 import type { SeriesInfoDTO } from "../types";
 import { formatDuration } from "../helpers/format-duration";
 
@@ -27,23 +28,66 @@ export function SeriesDetailPage() {
 
   const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
   const [seasonMenuOpen, setSeasonMenuOpen] = useState(false);
-  const [uploadEpisodeId, setUploadEpisodeId] = useState<string | null>(null);
-  const [filePath, setFilePath] = useState("");
+  const [addEpisodesOpen, setAddEpisodesOpen] = useState(false);
+
+  type UploadState = "idle" | "uploading" | "done" | "error";
+  const [uploadEpisode, setUploadEpisode] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [uploadProgress, setUploadProgress] = useState({
+    current: 0,
+    total: 0,
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeSeason = selectedSeason ?? seasons[0] ?? null;
   const episodes =
     activeSeason && data ? (data.temporadas[activeSeason] ?? []) : [];
 
-  const associateMut = useMutation({
-    mutationFn: ({ episodeId, path }: { episodeId: string; path: string }) =>
-      seriesApi.associateFile(Number(episodeId), path),
-    onSuccess: () => {
-      toast.success("Arquivo associado com sucesso");
-      setUploadEpisodeId(null);
-      setFilePath("");
-    },
-    onError: () => toast.error("Erro ao associar arquivo"),
-  });
+  function openUpload(ep: { id: string; title: string }) {
+    setUploadEpisode(ep);
+    setUploadFile(null);
+    setUploadState("idle");
+    setUploadProgress({ current: 0, total: 0 });
+  }
+
+  function closeUpload() {
+    if (uploadState === "uploading") return;
+    setUploadEpisode(null);
+  }
+
+  async function handleUpload() {
+    if (!uploadFile || !uploadEpisode) return;
+    const totalChunks = uploadApi.calcularChunks(uploadFile);
+    setUploadState("uploading");
+    setUploadProgress({ current: 0, total: totalChunks });
+    try {
+      const { uploadId, urls } = await uploadApi.iniciarEpisodio(
+        Number(uploadEpisode.id),
+        totalChunks,
+      );
+      const etags: string[] = [];
+      for (let i = 0; i < totalChunks; i++) {
+        const chunk = uploadApi.getChunk(uploadFile, i);
+        const etag = await uploadApi.enviarChunk(urls[i], chunk);
+        etags.push(etag);
+        setUploadProgress({ current: i + 1, total: totalChunks });
+      }
+      await uploadApi.concluirEpisodio(
+        Number(uploadEpisode.id),
+        uploadId,
+        etags,
+      );
+      setUploadState("done");
+      toast.success("Upload concluído — processando transcodificação");
+    } catch {
+      setUploadState("error");
+      toast.error("Erro durante o upload");
+    }
+  }
 
   if (isLoading) {
     return (
@@ -70,16 +114,26 @@ export function SeriesDetailPage() {
       </button>
 
       {/* Título */}
-      <h1 className="text-2xl font-bold text-text-strong">{info.name}</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-text-strong">{info.name}</h1>
+        <Button
+          variant="default"
+          size="lg"
+          onClick={() => setAddEpisodesOpen(true)}
+        >
+          <Plus />
+          Cadastrar episódios
+        </Button>
+      </div>
 
       {/* Poster + informações */}
-      <div className="flex gap-10">
+      <div className="flex gap-10 ">
         {/* Poster */}
         {info.cover ? (
           <img
             src={info.cover}
             alt={info.name}
-            className="w-52 object-cover rounded-xl shrink-0"
+            className="w-52 object-cover border border-border  rounded-md shrink-0"
           />
         ) : (
           <div className="w-52 bg-surface rounded-xl shrink-0" />
@@ -154,27 +208,27 @@ export function SeriesDetailPage() {
       </div>
 
       {/* Lista de episódios */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {episodes.length === 0 ? (
           <p className="text-sm text-text-muted">
             Nenhum episódio encontrado para esta temporada.
           </p>
         ) : (
           episodes.map((ep) => (
-            <div key={ep.id} className="flex items-center gap-5">
+            <div key={ep.id} className="flex items-start p-2 gap-2">
               {/* Thumbnail */}
               {ep.info?.movie_image ? (
                 <img
                   src={ep.info.movie_image}
                   alt={ep.title}
-                  className="w-48  object-cover rounded shrink-0"
+                  className="w-56 object-cover border border-border rounded shrink-0"
                 />
               ) : (
-                <div className="w-42 bg-surface rounded shrink-0" />
+                <div className="w-52 bg-surface rounded shrink-0" />
               )}
 
               {/* Infos do episódio */}
-              <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              <div className="flex flex-col gap-1.5  self-stretch justify-between p-2 flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-base font-bold text-text-strong truncate">
                     {ep.title}
@@ -185,7 +239,7 @@ export function SeriesDetailPage() {
                 </div>
 
                 {ep.info?.plot && (
-                  <p className="text-sm text-text leading-relaxed line-clamp-3">
+                  <p className="text-sm text-text-muted leading-relaxed line-clamp-3">
                     {ep.info.plot}
                   </p>
                 )}
@@ -193,11 +247,8 @@ export function SeriesDetailPage() {
                 <Button
                   variant="primary"
                   size="md"
-                  className="w-fit "
-                  onClick={() => {
-                    setUploadEpisodeId(ep.id);
-                    setFilePath("");
-                  }}
+                  className="w-fit"
+                  onClick={() => openUpload({ id: ep.id, title: ep.title })}
                 >
                   <Upload />
                   Upload
@@ -208,35 +259,98 @@ export function SeriesDetailPage() {
         )}
       </div>
 
+      {/* Modal de cadastro de episódios */}
+      <AddEpisodesModal
+        open={addEpisodesOpen}
+        onClose={() => setAddEpisodesOpen(false)}
+        seriesId={seriesId}
+      />
+
       {/* Modal de upload */}
       <Modal
-        open={!!uploadEpisodeId}
-        onClose={() => setUploadEpisodeId(null)}
-        size="lg"
+        open={!!uploadEpisode}
+        onClose={closeUpload}
+        title="Upload"
+        size="sm"
       >
-        <ModalTitle>Associar arquivo</ModalTitle>
-        <FormInput
-          autoFocus
-          value={filePath}
-          onChange={(e) => setFilePath(e.target.value)}
-          placeholder="/caminho/para/episodio.mp4"
-        />
-        <ModalFooter className="justify-end">
-          <Button variant="ghost" onClick={() => setUploadEpisodeId(null)}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={() =>
-              associateMut.mutate({
-                episodeId: uploadEpisodeId!,
-                path: filePath,
-              })
-            }
-            disabled={!filePath.trim() || associateMut.isPending}
-          >
-            {associateMut.isPending ? "Salvando..." : "Salvar"}
-          </Button>
-        </ModalFooter>
+        <p className="text-xs text-text-subtle">{uploadEpisode?.title}</p>
+
+        {uploadState === "idle" && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full cursor-pointer border border-dashed border-border-subtle rounded px-3 py-6 text-xs text-text-subtle hover:border-border hover:text-text-muted transition-colors text-center"
+            >
+              {uploadFile
+                ? uploadFile.name
+                : "Clique para selecionar o arquivo"}
+            </button>
+            {uploadFile && (
+              <p className="text-xs text-text-ghost text-center">
+                {(uploadFile.size / 1024 / 1024).toFixed(1)} MB ·{" "}
+                {uploadApi.calcularChunks(uploadFile)} chunks
+              </p>
+            )}
+            <ModalFooter>
+              <Button variant="ghost" onClick={closeUpload}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpload} disabled={!uploadFile}>
+                Iniciar upload
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+
+        {uploadState === "uploading" && (
+          <div className="space-y-3">
+            <div className="w-full bg-surface-input rounded-full h-1">
+              <div
+                className="bg-warning h-1 rounded-full transition-all duration-300"
+                style={{
+                  width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                }}
+              />
+            </div>
+            <p className="text-xs text-text-subtle text-center">
+              Chunk {uploadProgress.current} de {uploadProgress.total}
+            </p>
+          </div>
+        )}
+
+        {uploadState === "done" && (
+          <div className="space-y-4">
+            <p className="text-xs text-success text-center tracking-widest uppercase">
+              Upload concluído
+            </p>
+            <ModalFooter>
+              <Button variant="ghost" onClick={closeUpload}>
+                Fechar
+              </Button>
+            </ModalFooter>
+          </div>
+        )}
+
+        {uploadState === "error" && (
+          <div className="space-y-4">
+            <p className="text-xs text-error text-center tracking-widest uppercase">
+              Erro no upload
+            </p>
+            <ModalFooter>
+              <Button variant="ghost" onClick={closeUpload}>
+                Fechar
+              </Button>
+              <Button onClick={handleUpload}>Tentar novamente</Button>
+            </ModalFooter>
+          </div>
+        )}
       </Modal>
     </div>
   );
