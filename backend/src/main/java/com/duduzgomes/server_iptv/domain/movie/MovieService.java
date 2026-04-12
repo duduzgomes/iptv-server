@@ -59,7 +59,7 @@ public class MovieService {
             .name(movie.getTitle())
             .added(toTimestamp(movie.getCreatedAt()))
             .categoryId(String.valueOf(movie.getCategory().getId()))
-            .containerExtension("m3u8")
+            .containerExtension("mp4")
             .customSid("")
             .directSource("")
             .build();
@@ -173,7 +173,7 @@ public class MovieService {
             .streamIcon(movie.getPosterUrl())
             .categoryId(String.valueOf(movie.getCategory().getId()))
             .categoryIds(List.of(movie.getCategory().getId()))
-            .containerExtension("m3u8")
+            .containerExtension("mp4")
             .rating(movie.getRating() != null
                 ? movie.getRating().toString()
                 : "0")

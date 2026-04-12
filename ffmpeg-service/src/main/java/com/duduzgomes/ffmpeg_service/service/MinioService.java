@@ -1,12 +1,14 @@
 package com.duduzgomes.ffmpeg_service.service;
 
 import io.minio.*;
+import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -48,6 +50,25 @@ public class MinioService {
             log.debug("Upload concluído — key: {}", objectKey);
         } catch (Exception e) {
             throw new RuntimeException("Erro ao fazer upload: " + e.getMessage());
+        }
+    }
+
+    // URL pra FFmpeg baixar
+    public String gerarUrlInterna(String objectKey) {
+        try {
+            String url = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                    .bucket(bucket)
+                    .object(objectKey)
+                    .method(Method.GET)
+                    .expiry(1, TimeUnit.HOURS)
+                    .build()
+            );
+
+            return url;
+           
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar URL: " + e.getMessage());
         }
     }
 

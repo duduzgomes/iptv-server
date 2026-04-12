@@ -21,9 +21,38 @@ public class FFmpegService {
     @Value("${streaming.hls-segment-count:8}")
     private int segmentCount;
 
+    // move o moov atom para o início do MP4 (faststart) — melhora streaming progressivo
+    public void processarFaststart(String inputUrl, Path outputFile) throws Exception {
+        Files.createDirectories(outputFile.getParent());
+        Path logFile = outputFile.getParent().resolve("faststart.log");
+
+        List<String> comando = new ArrayList<>(List.of(
+            ffmpegPath,
+            "-i", inputUrl,
+            "-movflags", "faststart",
+            "-c", "copy",
+            outputFile.toString()
+        ));
+
+        log.info("Aplicando faststart em {}", outputFile);
+
+        Process processo = new ProcessBuilder(comando)
+            .redirectErrorStream(true)
+            .redirectOutput(logFile.toFile())
+            .start();
+
+        int exitCode = processo.waitFor();
+
+        if (exitCode != 0) {
+            String logContent = Files.readString(logFile);
+            throw new RuntimeException("FFmpeg faststart falhou (exit " + exitCode + "): " + logContent);
+        }
+
+        log.info("Faststart concluído: {}", outputFile);
+    }
+
     // transcodifica arquivo para HLS em múltiplas qualidades
     public void transcodar(String inputUrl, Path outputDir) throws Exception {
-        // cria pastas de saída
         Files.createDirectories(outputDir.resolve("720p"));
         Files.createDirectories(outputDir.resolve("480p"));
 

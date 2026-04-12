@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import com.duduzgomes.server_iptv.integration.minio.MinioService;
-
 @Slf4j
 @Component
 @Primary
@@ -16,18 +14,16 @@ import com.duduzgomes.server_iptv.integration.minio.MinioService;
 public class FFmpegClient implements IVodTranscoder {
 
     private final RestClient restClient;
-    private final MinioService minioService;
 
     @Value("${streaming.ffmpeg-service-url}")
     private String ffmpegServiceUrl;
 
     public void transcodarFilme(Long movieId, String minioKey) {
-        String inputUrl = minioService.gerarUrlInterna(minioKey);
-
+        
         var request = new TranscodeRequestDTO(
             movieId,
             "MOVIE",
-            inputUrl,
+            minioKey,
             "filmes/" + movieId
         );
 
@@ -35,12 +31,11 @@ public class FFmpegClient implements IVodTranscoder {
     }
 
     public void transcodarEpisodio(Long episodeId, String minioKey) {
-        String inputUrl = minioService.gerarUrlInterna(minioKey);
 
         var request = new TranscodeRequestDTO(
             episodeId,
             "EPISODE",
-            inputUrl,
+            minioKey,
             "series/episodes/" + episodeId
         );
 
@@ -64,7 +59,7 @@ public class FFmpegClient implements IVodTranscoder {
     record TranscodeRequestDTO(
         Long   contentId,
         String contentType,
-        String inputUrl,
+        String inputPath,
         String outputPath
     ) {}
 }

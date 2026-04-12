@@ -43,20 +43,31 @@ public class TranscodeService {
 
         String hlsPath = request.outputPath();
 
+        Path faststartFile = outputDir.resolve("input.mp4");
+
+        String inputUrl = minioService.gerarUrlInterna(request.inputPath());
+
         try {
             log.info("Iniciando transcodificação — {} id: {}",
                 request.contentType(), request.contentId());
 
-            // 1. transcodifica — FFmpeg baixa direto da URL do MinIO
-            ffmpegService.transcodar(request.inputUrl(), outputDir);
+            // 1. remuxar com faststart para mover o moov atom pro início
+            ffmpegService.processarFaststart(inputUrl, faststartFile);
 
-            // 2. faz upload de todos os segmentos pro MinIO
+            // 2. substitui o arquivo original no MinIO pelo com moov atom no início
+            minioService.upload(request.inputPath(), faststartFile);
+            log.info("Original substituído pelo faststart — key: {}", request.inputPath());
+
+            // 3. transcodifica a partir do arquivo local com faststart aplicado
+            ffmpegService.transcodar(faststartFile.toString(), outputDir);
+
+            // 4. faz upload dos segmentos HLS pro MinIO
             uploadDiretorioParaMinIO(outputDir, hlsPath);
 
             log.info("Transcodificação concluída — {} id: {}",
                 request.contentType(), request.contentId());
 
-            // 3. notifica Spring Boot
+            // 5. notifica Spring Boot
             notificar(new TranscodeCallbackDTO(
                 request.contentId(),
                 request.contentType(),
@@ -87,8 +98,9 @@ public class TranscodeService {
         Files.walkFileTree(dir, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file,BasicFileAttributes attrs) {
-                // pula o log do FFmpeg
-                if (file.getFileName().toString().equals("ffmpeg.log")) {
+                // pula arquivos temporários intermediários
+                String fileName = file.getFileName().toString();
+                if (fileName.equals("ffmpeg.log") || fileName.equals("input.mp4") || fileName.equals("faststart.log")) {
                     return FileVisitResult.CONTINUE;
                 }
 
