@@ -3,17 +3,22 @@ package com.duduzgomes.server_iptv.domain.movie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.duduzgomes.server_iptv.domain.category.CategoryRepository;
 import com.duduzgomes.server_iptv.domain.category.ContentType;
+import com.duduzgomes.server_iptv.domain.vod.VodStatus;
 import com.duduzgomes.server_iptv.integration.tmdb.TmdbService;
+import com.duduzgomes.server_iptv.security.JwtService;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import com.duduzgomes.server_iptv.xtream.dto.CategoryDTO;
 import com.duduzgomes.server_iptv.xtream.dto.VodInfoDTO;
 import com.duduzgomes.server_iptv.xtream.dto.VodInfoDetailDTO;
 import com.duduzgomes.server_iptv.xtream.dto.VodMovieDataDTO;
 import com.duduzgomes.server_iptv.xtream.dto.VodStreamDTO;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -25,6 +30,10 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final CategoryRepository categoryRepository;
     private final TmdbService tmdbService;
+    private final JwtService jwtService;
+
+    @Value("${xtream.server.url}")
+    private String serverUrl;
 
     public List<CategoryDTO> listarCategorias() {
         return categoryRepository
@@ -162,6 +171,24 @@ public class MovieService {
             throw new NotFoundException("Filme não encontrado");
         }
         movieRepository.deleteById(id);
+    }
+
+    public String gerarStreamUrl(Long id, String clientIp, String adminSubject) {
+        var movie = movieRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Filme não encontrado"));
+
+        if (movie.getVodStatus() != VodStatus.READY || movie.getHlsPath() == null) {
+            throw new NotFoundException("Filme ainda não está disponível para reprodução");
+        }
+
+        String token = jwtService.gerarStreamToken(adminSubject, clientIp);
+
+        return String.format("%s/vod-hls/%s/master.m3u8?sjwt=%s&id=%s",
+            serverUrl,
+            movie.getHlsPath(),
+            URLEncoder.encode(token, StandardCharsets.UTF_8),
+            id
+        );
     }
 
     private VodStreamDTO toVodStreamDTO(Movie movie) {

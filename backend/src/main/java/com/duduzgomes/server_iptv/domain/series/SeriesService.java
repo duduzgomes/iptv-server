@@ -2,6 +2,8 @@ package com.duduzgomes.server_iptv.domain.series;
 
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.duduzgomes.server_iptv.domain.category.CategoryRepository;
@@ -11,14 +13,19 @@ import com.duduzgomes.server_iptv.domain.series.episode.Episode;
 import com.duduzgomes.server_iptv.domain.series.episode.EpisodeRepository;
 import com.duduzgomes.server_iptv.domain.series.season.Season;
 import com.duduzgomes.server_iptv.domain.series.season.SeasonRepository;
+import com.duduzgomes.server_iptv.domain.vod.VodStatus;
 import com.duduzgomes.server_iptv.integration.tmdb.TmdbService;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.EpisodeDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.EpisodeInfoDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.SeriesDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.SeriesInfoDTO;
 import com.duduzgomes.server_iptv.integration.tmdb.dto.TmdbSeasonDetailDTO;
+import com.duduzgomes.server_iptv.security.JwtService;
 import com.duduzgomes.server_iptv.shared.exception.NotFoundException;
 import com.duduzgomes.server_iptv.xtream.dto.CategoryDTO;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Service
@@ -30,6 +37,10 @@ public class SeriesService {
     private final EpisodeRepository    episodeRepository;
     private final CategoryRepository   categoryRepository;
     private final TmdbService          tmdbService;
+    private final JwtService           jwtService;
+
+    @Value("${xtream.server.url}")
+    private String serverUrl;
 
     public List<CategoryDTO> listarCategorias() {
         return categoryRepository
@@ -130,6 +141,24 @@ public class SeriesService {
         }
 
         return episodiosSalvos;
+    }
+
+    public String gerarStreamUrl(Long id, String clientIp, String adminSubject) {
+        var episodio = episodeRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Episodio não encontrado"));
+
+        if (episodio.getVodStatus() != VodStatus.READY || episodio.getHlsPath() == null) {
+            throw new NotFoundException("Episodio não está disponível para reprodução");
+        }
+
+        String token = jwtService.gerarStreamToken(adminSubject, clientIp);
+
+        return String.format("%s/vod-hls/%s/master.m3u8?sjwt=%s&id=%s",
+            serverUrl,
+            episodio.getHlsPath(),
+            URLEncoder.encode(token, StandardCharsets.UTF_8),
+            id
+        );
     }
 
     public List<Series> listarEntidades() {

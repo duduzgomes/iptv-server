@@ -1,10 +1,13 @@
 package com.duduzgomes.server_iptv.domain.movie;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -52,6 +55,24 @@ public class MovieController {
         movieService.excluir(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{id}/stream-url")
+    public ResponseEntity<StreamUrlResponse> obterStreamUrl(
+        @PathVariable Long id,
+        HttpServletRequest request,
+        @AuthenticationPrincipal Jwt jwt
+    ) {
+        String clientIp = obterIp(request);
+        String url = movieService.gerarStreamUrl(id, clientIp, jwt.getSubject());
+        return ResponseEntity.ok(new StreamUrlResponse(url));
+    }
+
+    private String obterIp(HttpServletRequest request) {
+        String realIp = request.getHeader("X-Real-IP");
+        return (realIp != null && !realIp.isBlank()) ? realIp.trim() : request.getRemoteAddr();
+    }
+
+    record StreamUrlResponse(String url) {}
 
     record CriarMovieRequest(
         @NotNull  Long    categoryId,

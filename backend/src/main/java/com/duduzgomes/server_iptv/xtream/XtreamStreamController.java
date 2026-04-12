@@ -65,7 +65,7 @@ public class XtreamStreamController {
             clientIp
         );
 
-        // String token = jwtService.gerarStreamToken(user.getId(), clientIp);
+        // String token = jwtService.gerarStreamToken(String.valueOf(user.getId()), clientIp);
 
         String url = String.format("%s/hls/%s/master.m3u8?id=%s",
             serverUrl,
@@ -113,7 +113,7 @@ public class XtreamStreamController {
 
         if(extension.equals("mp4")){
 
-            String token = jwtService.gerarStreamToken(user.getId(), clientIp);
+            String token = jwtService.gerarStreamToken(String.valueOf(user.getId()), clientIp);
 
             // redireciona pro HLS no MinIO via Nginx
             String url = String.format("%s/vod-mp4/%s?sjwt=%s&id=%s",
@@ -128,7 +128,7 @@ public class XtreamStreamController {
                 .build();
         }
 
-        String token = jwtService.gerarStreamToken(user.getId(), clientIp);
+        String token = jwtService.gerarStreamToken(String.valueOf(user.getId()), clientIp);
 
         // redireciona pro HLS no MinIO via Nginx
         String url = String.format("%s/vod-hls/%s/master.m3u8?sjwt=%s&id=%s",
@@ -179,7 +179,7 @@ public class XtreamStreamController {
             clientIp
         );
 
-        String token = jwtService.gerarStreamToken(user.getId(), clientIp);
+        String token = jwtService.gerarStreamToken(String.valueOf(user.getId()), clientIp);
         
         String url = String.format("%s/vod/%s/master.m3u8?sjwt=%s&id=%s",
             serverUrl,

@@ -34,12 +34,12 @@ public class JwtService {
             .getTokenValue();
     }
 
-    public String gerarStreamToken(Long userId, String clientIp) {
+    public String gerarStreamToken(String subject, String clientIp) {
         var now = Instant.now();
 
         var claims = JwtClaimsSet.builder()
             .issuer("iptv-server")
-            .subject(userId.toString())
+            .subject(subject)
             .claim("type", "stream")
             .claim("ip", clientIp)
             .issuedAt(now)
