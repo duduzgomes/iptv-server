@@ -8,6 +8,7 @@ import { loginSchema } from "../schemas";
 import type { LoginFormData } from "../schemas";
 import { Field, FormInput } from "../ui/form-field";
 import { Button } from "../ui/button";
+import bgImage from "../assets/bg.webp";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -33,8 +34,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brand-deepest">
-      <div className="w-1/4 px-4">
+    <div
+      className="bg-cover bg-center relative min-h-screen flex items-center justify-center bg-brand-deepest"
+      style={{ backgroundImage: `url(${bgImage})` }}
+    >
+      <div className="absolute inset-0 bg-black/90" />
+      <div className="relative z-10 w-1/4 px-4">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="bg-surface border border-border-subtle rounded p-8 flex flex-col gap-6"

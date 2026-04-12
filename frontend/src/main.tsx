@@ -31,17 +31,18 @@ createRoot(document.getElementById("root")!).render(
         <App />
         <Toaster
           position="top-right"
+          style={{ width: "380" }}
           toastOptions={{
             unstyled: true,
             classNames: {
               toast: [
-                "flex items-start gap-3 w-full rounded-md px-4 py-3",
+                "flex items-start gap-3 w-full rounded-md px-5 py-4",
                 "border border-border bg-surface shadow-lg",
-                "text-xs text-text font-sans",
+                "text-sm text-text font-[var(--font-sans)]",
               ].join(" "),
-              title: "text-xs font-medium text-text",
-              description: "text-xs text-text-muted mt-0.5",
-              icon: "[&_svg]:size-3.5 shrink-0 mt-0.5",
+              title: "text-sm font-medium text-text",
+              description: "text-sm text-text-muted mt-0.5",
+              icon: "[&_svg]:size-4.5 shrink-0 mt-0.5",
               success: "border-border [&_[data-icon]]:text-success",
               error: "border-error/30 [&_[data-icon]]:text-error",
               warning: "border-warning/30 [&_[data-icon]]:text-warning",
