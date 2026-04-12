@@ -246,6 +246,7 @@ public class SeriesService {
             .title(episode.getTitle())
             .containerExtension("mp4")
             .season(seasonNumber)
+            .vodStatus(episode.getVodStatus())
             .info(EpisodeInfoDTO.builder()
                 .plot(episode.getSynopsis())
                 .duration(episode.getDuration() != null
