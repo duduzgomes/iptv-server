@@ -144,6 +144,7 @@ services:
     volumes:
       - hls_data:/hls
       - ./nginx/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./nginx/lua:/usr/local/openresty/nginx/conf/lua
       - ./backend/src/main/resources/certs/public.pem:/etc/nginx/certs/public.pem:ro
     depends_on:
       - spring-boot
