@@ -158,10 +158,10 @@ export function SeriesDetailPage() {
             <img
               src={info.cover}
               alt={info.name}
-              className="w-52 object-cover border border-border rounded-md shrink-0"
+              className="w-72 h-108 object-cover border border-border rounded-md shrink-0"
             />
           ) : (
-            <div className="w-52 bg-surface rounded-xl shrink-0" />
+            <div className="w-72 h-108 bg-surface rounded-xl shrink-0" />
           )}
 
           {/* Informações */}

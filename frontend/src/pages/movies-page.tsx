@@ -16,6 +16,7 @@ import { Button } from "../ui/button";
 import { StatusBadge } from "../ui/status-badge";
 import { DataTableHeader } from "../ui/data-table-header";
 import { ConfirmDialog } from "../ui/confirm-dialog";
+import { MovieDetailModal } from "../components/movie-detail-modal";
 
 const vodStatusLabel: Record<string, { label: string; status: string }> = {
   PENDING: { label: "Pendente", status: "PENDING" },
@@ -49,6 +50,7 @@ export function MoviesPage() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteMovieId, setDeleteMovieId] = useState<number | null>(null);
+  const [viewMovie, setViewMovie] = useState<Movie | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["movies"],
@@ -182,7 +184,11 @@ export function MoviesPage() {
           {data?.map((movie) => {
             const vod = vodStatusLabel[movie.vodStatus];
             return (
-              <TableRow key={movie.id}>
+              <TableRow
+                key={movie.id}
+                className="cursor-pointer"
+                onClick={() => setViewMovie(movie)}
+              >
                 <TableCell>
                   <div className="flex flex-col  gap-1">
                     <p className="text-text">{movie.title}</p>
@@ -201,7 +207,7 @@ export function MoviesPage() {
                     label={movie.active ? "Ativo" : "Inativo"}
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <RowActions
                     actions={[
                       {
@@ -233,6 +239,12 @@ export function MoviesPage() {
           })}
         </TableBody>
       </DataTable>
+
+      <MovieDetailModal
+        movie={viewMovie}
+        onClose={() => setViewMovie(null)}
+        onUpload={openUpload}
+      />
 
       {/* Modal upload */}
       <Modal

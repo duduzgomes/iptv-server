@@ -29,6 +29,9 @@ export interface Movie {
   originalTitle: string;
   year: number;
   genre: string;
+  synopsis: string | null;
+  director: string | null;
+  castMembers: string | null;
   posterUrl: string | null;
   rating: number;
   duration: number;
