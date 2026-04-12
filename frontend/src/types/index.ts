@@ -71,6 +71,7 @@ export interface EpisodeDTO {
   episode_num: number;
   title: string;
   season: number;
+  vod_status: "PENDING" | "UPLOADING" | "PROCESSING" | "READY" | "ERROR" | null;
   info?: {
     plot?: string;
     duration?: string;

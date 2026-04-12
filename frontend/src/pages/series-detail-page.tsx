@@ -1,13 +1,14 @@
 import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronDown, Plus, Upload } from "lucide-react";
+import { ArrowLeft, ChevronDown, Play, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { seriesApi } from "../api/series";
 import { uploadApi } from "../api/upload";
 import { Button } from "../ui/button";
 import { Modal, ModalFooter } from "../ui/modal";
 import { AddEpisodesModal } from "../components/add-episodes-modal";
+import { VideoPlayerModal } from "../components/video-player-modal";
 import type { SeriesInfoDTO } from "../types";
 import { formatDuration } from "../helpers/format-duration";
 
@@ -29,6 +30,21 @@ export function SeriesDetailPage() {
   const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
   const [seasonMenuOpen, setSeasonMenuOpen] = useState(false);
   const [addEpisodesOpen, setAddEpisodesOpen] = useState(false);
+
+  const [player, setPlayer] = useState<{ src: string; title: string } | null>(null);
+  const [loadingStreamId, setLoadingStreamId] = useState<string | null>(null);
+
+  async function handleWatch(ep: { id: string; title: string }) {
+    setLoadingStreamId(ep.id);
+    try {
+      const url = await seriesApi.getStreamUrl(Number(ep.id));
+      setPlayer({ src: url, title: ep.title });
+    } catch {
+      toast.error("Não foi possível obter a URL do vídeo.");
+    } finally {
+      setLoadingStreamId(null);
+    }
+  }
 
   type UploadState = "idle" | "uploading" | "done" | "error";
   const [uploadEpisode, setUploadEpisode] = useState<{
@@ -270,15 +286,29 @@ export function SeriesDetailPage() {
                   </p>
                 )}
 
-                <Button
-                  variant="primary"
-                  size="md"
-                  className="w-fit"
-                  onClick={() => openUpload({ id: ep.id, title: ep.title })}
-                >
-                  <Upload />
-                  Upload
-                </Button>
+                <div className="flex gap-2">
+                  {ep.vod_status === "READY" && (
+                    <Button
+                      variant="primary"
+                      size="md"
+                      className="w-fit"
+                      disabled={loadingStreamId === ep.id}
+                      onClick={() => handleWatch({ id: ep.id, title: ep.title })}
+                    >
+                      <Play />
+                      {loadingStreamId === ep.id ? "Carregando..." : "Assistir"}
+                    </Button>
+                  )}
+                  <Button
+                    variant="default"
+                    size="md"
+                    className="w-fit"
+                    onClick={() => openUpload({ id: ep.id, title: ep.title })}
+                  >
+                    <Upload />
+                    Upload
+                  </Button>
+                </div>
               </div>
             </div>
           ))
@@ -378,6 +408,12 @@ export function SeriesDetailPage() {
           </div>
         )}
       </Modal>
+      <VideoPlayerModal
+        open={!!player}
+        onClose={() => setPlayer(null)}
+        src={player?.src ?? ""}
+        title={player?.title}
+      />
     </div>
   );
 }

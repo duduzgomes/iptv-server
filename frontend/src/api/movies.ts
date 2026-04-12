@@ -15,4 +15,7 @@ export const moviesApi = {
 
   remove: (id: number) =>
     client.delete(`/admin/movies/${id}`).then((r) => r.data),
+
+  getStreamUrl: (id: number) =>
+    client.get<{ url: string }>(`/admin/movies/${id}/stream-url`).then((r) => r.data.url),
 };

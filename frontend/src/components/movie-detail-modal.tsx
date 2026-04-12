@@ -1,8 +1,12 @@
-import { Upload } from "lucide-react";
+import { useState } from "react";
+import { Upload, Play } from "lucide-react";
+import { toast } from "sonner";
 import type { Movie } from "../types";
 import { Modal } from "../ui/modal";
 import { Button } from "../ui/button";
 import { formatDuration } from "../helpers/format-duration";
+import { moviesApi } from "../api/movies";
+import { VideoPlayerModal } from "./video-player-modal";
 
 interface InfoRowProps {
   label: string;
@@ -29,7 +33,27 @@ export function MovieDetailModal({
   onClose,
   onUpload,
 }: MovieDetailModalProps) {
+  const [playerOpen, setPlayerOpen] = useState(false);
+  const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  const [loadingStream, setLoadingStream] = useState(false);
+
   if (!movie) return null;
+
+  const canWatch = movie.vodStatus === "READY";
+
+  async function handleWatch() {
+    if (!movie) return;
+    setLoadingStream(true);
+    try {
+      const url = await moviesApi.getStreamUrl(movie.id);
+      setStreamUrl(url);
+      setPlayerOpen(true);
+    } catch {
+      toast.error("Não foi possível obter a URL do vídeo.");
+    } finally {
+      setLoadingStream(false);
+    }
+  }
 
   return (
     <Modal open={!!movie} onClose={onClose} size="xl">
@@ -93,8 +117,14 @@ export function MovieDetailModal({
 
         {/* Ações */}
         <div className="flex gap-3 self-end">
+          {canWatch && (
+            <Button variant="primary" onClick={handleWatch} disabled={loadingStream}>
+              <Play />
+              {loadingStream ? "Carregando..." : "Assistir"}
+            </Button>
+          )}
           <Button
-            variant="primary"
+            variant="default"
             onClick={() => {
               onClose();
               onUpload(movie);
@@ -108,6 +138,15 @@ export function MovieDetailModal({
           </Button>
         </div>
       </div>
+
+      {streamUrl && (
+        <VideoPlayerModal
+          open={playerOpen}
+          onClose={() => setPlayerOpen(false)}
+          src={streamUrl}
+          title={movie.title}
+        />
+      )}
     </Modal>
   );
 }

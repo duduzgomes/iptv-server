@@ -31,4 +31,7 @@ export const seriesApi = {
     api.patch(`/admin/series/${id}/sincronizar`).then((r) => r.data),
 
   delete: (id: number): Promise<void> => api.delete(`/admin/series/${id}`),
+
+  getStreamUrl: (episodeId: number): Promise<string> =>
+    api.get<{ url: string }>(`/admin/series/${episodeId}/stream-url`).then((r) => r.data.url),
 };
